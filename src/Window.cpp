@@ -2,6 +2,7 @@
 #include <iostream>
 
 
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     // Update OpenGL's viewport to match the new window size
@@ -108,21 +109,22 @@ bool Window::shouldClose()
 
 void Window::startImGUIFrame()
 {
-    // --- RENDER IMGUI UI ---
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    // Dockspace setup
+    // Enable dockspace
     static bool dockspaceOpen = true;
-    static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
+    static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None; // Changed from PassthruCentralNode
 
-    ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking|
+    // Make sure we're not preventing docking
+    ImGuiWindowFlags window_flags = 
         ImGuiWindowFlags_NoTitleBar |
         ImGuiWindowFlags_NoCollapse |
         ImGuiWindowFlags_NoBringToFrontOnFocus |
         ImGuiWindowFlags_NoNavFocus |
         ImGuiWindowFlags_NoBackground;
+    // Removed ImGuiWindowFlags_MenuBar if you're not using it
 
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->WorkPos);
@@ -134,13 +136,11 @@ void Window::startImGUIFrame()
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
     ImGui::Begin("DockSpaceHost", &dockspaceOpen, window_flags);
-    //ImGui::Begin("DockSpaceHost", &dockspaceOpen);
-    
     ImGui::PopStyleVar(3);
 
+    // Create the dockspace
     ImGuiID dockspace_id = ImGui::GetID("DockSpaceHost");
-    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
-
+    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 }
 
 void Window::DrawImGUIDockspace(Framebuffer& SceneFramebuffer, glm::vec2& SceneViewportSize)
@@ -157,6 +157,7 @@ void Window::DrawImGUIDockspace(Framebuffer& SceneFramebuffer, glm::vec2& SceneV
         }
     }
 
+
     uint64_t textureID = SceneFramebuffer.getTextureID(); // assumes GL texture id
     ImGui::Image(
         (void*)(intptr_t)textureID,                                    // safe cast
@@ -164,17 +165,29 @@ void Window::DrawImGUIDockspace(Framebuffer& SceneFramebuffer, glm::vec2& SceneV
         ImVec2 {0, 1}, ImVec2 {1, 0}                                 // flip vertically if needed
     );
 
+    static bool sceneHovered = false;
+    sceneHovered = ImGui::IsItemHovered();
+
     ImGui::End();
+
 }
 
 void Window::DrawImGUIControlsWindow(glm::vec3& lightPos)
 {
-    // Controls window
-    ImGui::Begin("Controls");
-    ImGui::Text("Light Position");
-    ImGui::SliderFloat("X", &lightPos.x, -2.0f, 2.0f);
-    ImGui::SliderFloat("Y", &lightPos.y, -2.0f, 2.0f);
-    ImGui::SliderFloat("Z", &lightPos.z, -2.0f, 2.0f);
+    // Controls window - explicitly allow docking and moving
+    ImGuiWindowFlags window_flags = 0; // No restrictive flags
+
+    if (ImGui::Begin("Controls", nullptr, window_flags))
+    {
+        ImGui::Text("Light Position");
+        ImGui::SliderFloat("X", &lightPos.x, -2.0f, 2.0f);
+        ImGui::SliderFloat("Y", &lightPos.y, -2.0f, 2.0f);
+        ImGui::SliderFloat("Z", &lightPos.z, -2.0f, 2.0f);
+
+        // Debug info
+        ImGui::Separator();
+        ImGui::Text("Window is docked: %s", ImGui::IsWindowDocked() ? "Yes" : "No");
+    }
     ImGui::End();
 }
 

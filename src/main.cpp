@@ -53,7 +53,6 @@ int main()
     glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
     glfwSetWindowUserPointer(nativeWindow, &camera);
-    glfwSetCursorPosCallback(nativeWindow, Camera::MouseCallback);
 
     // --- MAIN LOOP ---
     while (!window.shouldClose())
@@ -64,6 +63,30 @@ int main()
 
         process_app_input(nativeWindow);
         camera.ProcessInput(nativeWindow, deltaTime);
+
+        ImGuiIO& io = ImGui::GetIO();
+        if (!io.WantCaptureMouse)
+        {
+            // If ImGui is not using the mouse, we can pass input to the camera.
+            // For a better experience, you might only want to do this when a mouse button is held down.
+            if (glfwGetMouseButton(nativeWindow, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+            {
+                glfwSetInputMode(nativeWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+                double xpos, ypos;
+                glfwGetCursorPos(nativeWindow, &xpos, &ypos);
+                camera.ProcessMouseMovement(static_cast<float>(xpos), static_cast<float>(ypos), true);
+            }
+            else
+            {
+                glfwSetInputMode(nativeWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                camera.SetFirstMouse(true); // Reset so movement isn't jerky next time
+            }
+        }
+        else
+        {
+            glfwSetInputMode(nativeWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        }
 
         // --- RENDER 3D SCENE TO FRAMEBUFFER ---
         sceneFramebuffer.bind();
