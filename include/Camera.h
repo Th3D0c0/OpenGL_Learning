@@ -36,6 +36,8 @@ public:
     float MovementSpeed;
     float MouseSensitivity;
 
+
+public:
     // constructor
     Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH);
 
@@ -43,12 +45,13 @@ public:
 
     void ProcessKeyboard(Camera_Movement direction, float deltaTime);
     void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch = true);
-
     // Processes keyboard input from a GLFW window
     void ProcessInput(GLFWwindow* window, float deltaTime);
 
     // Static callback function that GLFW will call
     static void MouseCallback(GLFWwindow* window, double xpos, double ypos);
+
+    void SetFirstMouse(bool value) { m_firstMouse = value; };
 
 private:
     // Mouse state now lives inside the camera
@@ -56,5 +59,6 @@ private:
     float m_lastY;
     bool m_firstMouse;
 
+private:
     void updateCameraVectors();
 };

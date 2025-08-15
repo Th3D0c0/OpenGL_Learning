@@ -1,8 +1,11 @@
 #include "Camera.h"
-#include <iostream>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include "imgui.h"
+
 #include <vector>
+#include <iostream>
 
 // Update the constructor to initialize mouse state
 Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch) :
@@ -13,6 +16,7 @@ Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch) :
     m_lastY(0.0f), // Initialize
     m_firstMouse(true) // Initialize
 {
+
     Position = position;
     WorldUp = up;
     Yaw = yaw;
@@ -86,6 +90,7 @@ void Camera::ProcessMouseMovement(float xpos, float ypos, bool constrainPitch)
 // Implement the static callback function
 void Camera::MouseCallback(GLFWwindow* window, double xpos, double ypos)
 {
+
     // 1. Retrieve the camera object stored in the window
     Camera* camera = static_cast<Camera*>(glfwGetWindowUserPointer(window));
 
