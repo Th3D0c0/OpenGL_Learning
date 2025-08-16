@@ -12,7 +12,7 @@ public:
     // Resizes the framebuffer and its attachments
     void resize(unsigned int width, unsigned int height);
 
-    unsigned int getTextureID() const { return m_ColorAttachment; }
+    unsigned int getTextureColorBuffer() const { return m_ColorAttachment; }
 
 private:
     // Helper function to create/recreate the framebuffer

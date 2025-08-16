@@ -78,29 +78,166 @@ void Shader::use()
     glUseProgram(ID);
 }
 
-void Shader::setBool(const std::string& name, bool value) const
+//-------------------------------------------------------------------------
+// Scalar Uniform Setters
+//-------------------------------------------------------------------------
+void Shader::setUniformValue(const std::string& name, float x, float y, float z) const
 {
-    glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
+    glUniform3f(getUniformLocation(name), x, y, z);
 }
-void Shader::setInt(const std::string& name, int value) const
+
+void Shader::setUniformValue(const std::string& name, int x, int y, int z) const
 {
-    glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
+    glUniform3i(getUniformLocation(name), x, y, z);
 }
-void Shader::setFloat(const std::string& name, float value) const
+
+void Shader::setUniformValue(const std::string& name, double x, double y, double z) const
 {
-    glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
+    glUniform3d(getUniformLocation(name), x, y, z);
 }
-void Shader::setVec3(const std::string& name, float v1, float v2, float v3) const
+
+void Shader::setUniformValue(const std::string& name, bool value) const
 {
-    glUniform3f(glGetUniformLocation(ID, name.c_str()), v1, v2, v3);
+    glUniform1i(getUniformLocation(name), static_cast<int>(value));
 }
-void Shader::setVec3(const std::string& name, const glm::vec3& value) const
+
+void Shader::setUniformValue(const std::string& name, int value) const
 {
-    glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, glm::value_ptr(value));
+    glUniform1i(getUniformLocation(name), value);
 }
-void Shader::setMat4(const std::string& name, const glm::mat4& mat) const
+
+void Shader::setUniformValue(const std::string& name, unsigned int value) const
 {
-    glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(mat));
+    glUniform1ui(getUniformLocation(name), value);
+}
+
+void Shader::setUniformValue(const std::string& name, float value) const
+{
+    glUniform1f(getUniformLocation(name), value);
+}
+
+void Shader::setUniformValue(const std::string& name, double value) const
+{
+    glUniform1d(getUniformLocation(name), value);
+}
+
+
+//-------------------------------------------------------------------------
+// Vector Uniform Setters
+//-------------------------------------------------------------------------
+
+// 2-component vectors
+void Shader::setUniformValue(const std::string& name, const glm::vec2& value) const
+{
+    glUniform2fv(getUniformLocation(name), 1, glm::value_ptr(value));
+}
+void Shader::setUniformValue(const std::string& name, const glm::ivec2& value) const
+{
+    glUniform2iv(getUniformLocation(name), 1, glm::value_ptr(value));
+}
+void Shader::setUniformValue(const std::string& name, const glm::uvec2& value) const
+{
+    glUniform2uiv(getUniformLocation(name), 1, glm::value_ptr(value));
+}
+void Shader::setUniformValue(const std::string& name, const glm::dvec2& value) const
+{
+    glUniform2dv(getUniformLocation(name), 1, glm::value_ptr(value));
+}
+
+// 3-component vectors
+void Shader::setUniformValue(const std::string& name, const glm::vec3& value) const
+{
+    glUniform3fv(getUniformLocation(name), 1, glm::value_ptr(value));
+}
+void Shader::setUniformValue(const std::string& name, const glm::ivec3& value) const
+{
+    glUniform3iv(getUniformLocation(name), 1, glm::value_ptr(value));
+}
+void Shader::setUniformValue(const std::string& name, const glm::uvec3& value) const
+{
+    glUniform3uiv(getUniformLocation(name), 1, glm::value_ptr(value));
+}
+void Shader::setUniformValue(const std::string& name, const glm::dvec3& value) const
+{
+    glUniform3dv(getUniformLocation(name), 1, glm::value_ptr(value));
+}
+
+// 4-component vectors
+void Shader::setUniformValue(const std::string& name, const glm::vec4& value) const
+{
+    glUniform4fv(getUniformLocation(name), 1, glm::value_ptr(value));
+}
+void Shader::setUniformValue(const std::string& name, const glm::ivec4& value) const
+{
+    glUniform4iv(getUniformLocation(name), 1, glm::value_ptr(value));
+}
+void Shader::setUniformValue(const std::string& name, const glm::uvec4& value) const
+{
+    glUniform4uiv(getUniformLocation(name), 1, glm::value_ptr(value));
+}
+void Shader::setUniformValue(const std::string& name, const glm::dvec4& value) const
+{
+    glUniform4dv(getUniformLocation(name), 1, glm::value_ptr(value));
+}
+
+//-------------------------------------------------------------------------
+// Matrix Uniform Setters
+//-------------------------------------------------------------------------
+
+// 2x2 matrices
+void Shader::setUniformValue(const std::string& name, const glm::mat2& value) const
+{
+    glUniformMatrix2fv(getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value));
+}
+void Shader::setUniformValue(const std::string& name, const glm::dmat2& value) const
+{
+    glUniformMatrix2dv(getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value));
+}
+
+// 3x3 matrices
+void Shader::setUniformValue(const std::string& name, const glm::mat3& value) const
+{
+    glUniformMatrix3fv(getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value));
+}
+void Shader::setUniformValue(const std::string& name, const glm::dmat3& value) const
+{
+    glUniformMatrix3dv(getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value));
+}
+
+// 4x4 matrices
+void Shader::setUniformValue(const std::string& name, const glm::mat4& value) const
+{
+    glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value));
+}
+void Shader::setUniformValue(const std::string& name, const glm::dmat4& value) const
+{
+    glUniformMatrix4dv(getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value));
+}
+
+// Non-square matrices
+void Shader::setUniformValue(const std::string& name, const glm::mat2x3& value) const
+{
+    glUniformMatrix2x3fv(getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value));
+}
+void Shader::setUniformValue(const std::string& name, const glm::mat3x2& value) const
+{
+    glUniformMatrix3x2fv(getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value));
+}
+void Shader::setUniformValue(const std::string& name, const glm::mat2x4& value) const
+{
+    glUniformMatrix2x4fv(getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value));
+}
+void Shader::setUniformValue(const std::string& name, const glm::mat4x2& value) const
+{
+    glUniformMatrix4x2fv(getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value));
+}
+void Shader::setUniformValue(const std::string& name, const glm::mat3x4& value) const
+{
+    glUniformMatrix3x4fv(getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value));
+}
+void Shader::setUniformValue(const std::string& name, const glm::mat4x3& value) const
+{
+    glUniformMatrix4x3fv(getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value));
 }
 
 void Shader::checkCompileErrors(unsigned int shader, std::string type)
@@ -125,4 +262,23 @@ void Shader::checkCompileErrors(unsigned int shader, std::string type)
             std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
         }
     }
+}
+
+int Shader::getUniformLocation(const std::string& name) const
+{
+    if (m_UniformLocationCache.find(name) != m_UniformLocationCache.end())
+    {
+        return m_UniformLocationCache[name];
+    }
+
+    int location = glGetUniformLocation(ID, name.c_str());
+    if (location == -1)
+    {
+        // It's often useful to know if a uniform wasn't found.
+        // This can happen if the uniform is not used in the shader,
+        // as the compiler may optimize it out.
+        std::cerr << "Warning: uniform '" << name << "' not found." << std::endl;
+    }
+    m_UniformLocationCache[name] = location;
+    return location;
 }
