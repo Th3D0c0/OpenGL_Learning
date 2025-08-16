@@ -1,5 +1,15 @@
 #include "Config.h"
 
+#ifdef _WIN32
+#include <windows.h>
+extern "C" {
+    // For NVIDIA GPUs
+    __declspec(dllexport) uint32_t NvOptimusEnablement = 0x00000001;
+    // For AMD GPUs
+    __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
+#endif
+
 // Global Camera and Timing
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 float deltaTime = 0.0f;
