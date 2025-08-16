@@ -119,10 +119,10 @@ void Window::startImGUIFrame()
     ImGuiWindowFlags window_flags = 
         ImGuiWindowFlags_NoTitleBar |
         ImGuiWindowFlags_NoCollapse |
+        ImGuiWindowFlags_NoDocking|
         ImGuiWindowFlags_NoBringToFrontOnFocus |
         ImGuiWindowFlags_NoNavFocus |
         ImGuiWindowFlags_NoBackground;
-    // Removed ImGuiWindowFlags_MenuBar if you're not using it
 
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->WorkPos);
@@ -165,8 +165,16 @@ void Window::DrawSceneView(Framebuffer& framebuffer, Camera& camera, GLFWwindow*
     // A static variable to track if we are currently controlling the camera
     static bool isControllingCamera = false;
 
+    static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None; // Changed from PassthruCentralNode
+    ImGuiWindowFlags window_flags =
+        ImGuiWindowFlags_NoTitleBar |
+        ImGuiWindowFlags_NoCollapse |
+        ImGuiWindowFlags_NoScrollbar|
+        ImGuiWindowFlags_NoScrollWithMouse;
+
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::Begin("Scene");
+
+    ImGui::Begin("Scene", NULL, window_flags);
 
     bool isHovered = ImGui::IsWindowHovered();
 
@@ -200,6 +208,9 @@ void Window::DrawSceneView(Framebuffer& framebuffer, Camera& camera, GLFWwindow*
     ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
     uint64_t textureID = framebuffer.getTextureColorBuffer();
     ImGui::Image(reinterpret_cast<void*>(textureID), viewportPanelSize, ImVec2(0, 1), ImVec2(1, 0));
+
+    ImGuiID dockspace_id = ImGui::GetID("DockSpaceHost");
+    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 
     ImGui::End();
     ImGui::PopStyleVar();
