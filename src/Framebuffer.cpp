@@ -65,6 +65,11 @@ void Framebuffer::unbind()
 
 void Framebuffer::resize(unsigned int width, unsigned int height)
 {
+    if (width == 0 || height == 0 || (width == m_Width && height == m_Height))
+    {
+        return;
+    }
+
     m_Width = width;
     m_Height = height;
     invalidate();

@@ -1,6 +1,8 @@
+#include <Texture.h>
 #include "Sphere.h"
 #include <vector>
 #include <cmath>
+
 
 // Keep these includes for M_PI if not defined
 #ifndef M_PI
@@ -10,8 +12,9 @@
 Sphere::Sphere(float radius, int sectorCount, int stackCount)
 	:Mesh(
 		[&]() {
-            std::vector<float> vertices;
+            std::vector<Vertex> vertices;
             const float PI = M_PI;
+            Vertex vertex;
             for (int i = 0; i <= stackCount; ++i)
             {
                 float stackAngle = PI / 2 - i * PI / stackCount;
@@ -22,13 +25,18 @@ Sphere::Sphere(float radius, int sectorCount, int stackCount)
                     float sectorAngle = j * 2 * PI / sectorCount;
                     float x = xy * cosf(sectorAngle);
                     float y = xy * sinf(sectorAngle);
-                    vertices.push_back(x);
-                    vertices.push_back(y);
-                    vertices.push_back(z);
-                    // Normals
-                    vertices.push_back(x / radius);
-                    vertices.push_back(y / radius);
-                    vertices.push_back(z / radius);
+
+                    // Set Vertex Position
+                    vertex.Position = glm::vec3(x, y, z);
+
+                    // Set vertex Normal
+                    vertex.Normal = glm::vec3(x / radius, y / radius, z / radius);
+
+                    // Set Vertex Texture
+                    vertex.TextCoord.x = (float)j / sectorCount;
+                    vertex.TextCoord.y = (float)i / stackCount;
+
+                    vertices.push_back(vertex);
                 }
             }
             return vertices;
@@ -57,7 +65,8 @@ Sphere::Sphere(float radius, int sectorCount, int stackCount)
                 }
             }
             return indices;
-        }()
+        }(),
+            std::vector<Texture>()
 	)
 {
 }

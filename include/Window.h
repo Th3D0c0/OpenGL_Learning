@@ -8,6 +8,7 @@
 #include "backends/imgui_impl_opengl3.h"
 
 #include "Framebuffer.h"
+#include "Camera.h"
 
 class Window
 {
@@ -34,7 +35,7 @@ public:
 
     // IMGUI WINDOWS
     void DrawImGUIControlsWindow(glm::vec3& lightPos);
-    void DrawImGUIDockspace(Framebuffer& SceneFramebuffer, glm::vec2& SceneViewportSize);
+    void DrawSceneView(Framebuffer& framebuffer, Camera& camera, GLFWwindow* nativeWindow);
 
 private:
     GLFWwindow* m_Window; // Opaque window handle

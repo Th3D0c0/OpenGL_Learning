@@ -5,9 +5,11 @@ out vec4 FragColor;
 // Inputs from the vertex shader
 in vec3 FragPos;
 in vec3 Normal;
+in vec2 TextCoords;
+
+uniform sampler2D texture_diffuse1;
 
 // New uniforms for lighting
-uniform vec3 objectColor;
 uniform vec3 lightColor;
 uniform vec3 lightPos;
 uniform vec3 viewPos;
@@ -36,7 +38,8 @@ void main()
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
     vec3 specular = specularStrength * spec * lightColor;
 
+    vec4 textureColor = texture(texture_diffuse1, TextCoords);
     // --- Final Color ---
-    vec3 result = (ambient + diffuse + specular) * objectColor;
+    vec3 result = (ambient + diffuse + specular) * textureColor.rgb;
     FragColor = vec4(result, 1.0);
 }

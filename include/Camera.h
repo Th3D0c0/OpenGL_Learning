@@ -11,7 +11,9 @@ enum Camera_Movement
     FORWARD,
     BACKWARD,
     LEFT,
-    RIGHT
+    RIGHT,
+    DOWN,
+    UP
 };
 
 // ... default values ...
@@ -45,6 +47,7 @@ public:
 
     void ProcessKeyboard(Camera_Movement direction, float deltaTime);
     void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch = true);
+    void ProcessMouseDelta(float xoffset, float yoffset, bool constrainPitch = true);
     // Processes keyboard input from a GLFW window
     void ProcessInput(GLFWwindow* window, float deltaTime);
 
@@ -52,6 +55,9 @@ public:
     static void MouseCallback(GLFWwindow* window, double xpos, double ypos);
 
     void SetFirstMouse(bool value) { m_firstMouse = value; };
+
+public:
+    static bool isFocused;
 
 private:
     // Mouse state now lives inside the camera

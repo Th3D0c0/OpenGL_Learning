@@ -7,6 +7,8 @@
 #include <vector>
 #include <iostream>
 
+bool Camera::isFocused {false};
+
 // Update the constructor to initialize mouse state
 Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch) :
     Front(glm::vec3(0.0f, 0.0f, -1.0f)),
@@ -31,6 +33,7 @@ glm::mat4 Camera::GetViewMatrix()
 
 void Camera::ProcessInput(GLFWwindow* window, float deltaTime)
 {
+    
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -39,10 +42,15 @@ void Camera::ProcessInput(GLFWwindow* window, float deltaTime)
         ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         ProcessKeyboard(RIGHT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+        ProcessKeyboard(DOWN, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+        ProcessKeyboard(UP, deltaTime);
 }
 
 void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
 {
+    if (isFocused != true) return;
     float velocity = MovementSpeed * deltaTime;
     if (direction == FORWARD)
         Position += Front * velocity;
@@ -52,6 +60,10 @@ void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
         Position -= Right * velocity;
     if (direction == RIGHT)
         Position += Right * velocity;
+    if (direction == DOWN)
+        Position -= WorldUp * glm::vec3(0.0f, 2.0f, 0.0f) * deltaTime;
+    if (direction == UP)
+        Position += WorldUp * glm::vec3(0.0f, 2.0f, 0.0f) * deltaTime;
 }
 
 // Update ProcessMouseMovement to handle the first-mouse logic
@@ -75,6 +87,25 @@ void Camera::ProcessMouseMovement(float xpos, float ypos, bool constrainPitch)
 
     Yaw += xoffset;
     Pitch += yoffset;
+
+    if (constrainPitch)
+    {
+        if (Pitch > 89.0f)
+            Pitch = 89.0f;
+        if (Pitch < -89.0f)
+            Pitch = -89.0f;
+    }
+
+    updateCameraVectors();
+}
+
+void Camera::ProcessMouseDelta(float xoffset, float yoffset, bool constrainPitch)
+{
+    xoffset *= MouseSensitivity;
+    yoffset *= MouseSensitivity;
+
+    Yaw += xoffset;
+    Pitch += -yoffset;
 
     if (constrainPitch)
     {

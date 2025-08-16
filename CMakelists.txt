@@ -66,17 +66,25 @@ add_library(imgui STATIC
     "${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/imgui/backends/imgui_impl_opengl3.cpp"
 )
 
+target_link_libraries(imgui PUBLIC glfw)
+
 # Make ImGui's headers available to any target that links it
 target_include_directories(imgui PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/imgui"
     "${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/imgui/backends"
 )
 
-target_link_libraries(imgui PUBLIC glfw)
+# -----------------------------------------------------------------------------
+# ## NEW: Build Assimp from local source using its own CMakeLists
+# -----------------------------------------------------------------------------
+set(ASSIMP_BUILD_TESTS OFF)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/assimp")
 
 # -----------------------------------------------------------------------------
 # Executable Configuration
 # -----------------------------------------------------------------------------
+
 add_executable(PhysicsTest "")
 
 # This will hide the console ONLY in Release mode on Windows
@@ -105,6 +113,7 @@ target_link_libraries(PhysicsTest PRIVATE
   glm
   glfw
   imgui
+  assimp
 )
 
 # -----------------------------------------------------------------------------
@@ -123,3 +132,5 @@ add_custom_command(TARGET PhysicsTest POST_BUILD
     "$<TARGET_FILE_DIR:PhysicsTest>/res" # Destination
     COMMENT "Copying resources to build output directory..."
 )
+
+file(COPY res DESTINATION ${CMAKE_BINARY_DIR})

@@ -1,8 +1,6 @@
 #include "Window.h"
 #include <iostream>
 
-
-
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     // Update OpenGL's viewport to match the new window size
@@ -52,7 +50,7 @@ Window::Window(int width, int height, const char* title, bool fullscreen)
     }
     glfwMakeContextCurrent(m_Window);
 
-    glfwSwapInterval(1);
+    glfwSwapInterval(0);
 
     if(!m_CursorEnabled)
         glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -143,35 +141,6 @@ void Window::startImGUIFrame()
     ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 }
 
-void Window::DrawImGUIDockspace(Framebuffer& SceneFramebuffer, glm::vec2& SceneViewportSize)
-{
-    ImGui::Begin("Scene");
-    ImVec2 avail = ImGui::GetContentRegionAvail();
-
-    if (SceneViewportSize.x != avail.x || SceneViewportSize.y != avail.y)
-    {
-        SceneViewportSize = {avail.x, avail.y};
-        if (SceneViewportSize.x > 0 && SceneViewportSize.y > 0)
-        {
-            SceneFramebuffer.resize((int)SceneViewportSize.x, (int)SceneViewportSize.y);
-        }
-    }
-
-
-    uint64_t textureID = SceneFramebuffer.getTextureID(); // assumes GL texture id
-    ImGui::Image(
-        (void*)(intptr_t)textureID,                                    // safe cast
-        ImVec2 {SceneViewportSize.x, SceneViewportSize.y},
-        ImVec2 {0, 1}, ImVec2 {1, 0}                                 // flip vertically if needed
-    );
-
-    static bool sceneHovered = false;
-    sceneHovered = ImGui::IsItemHovered();
-
-    ImGui::End();
-
-}
-
 void Window::DrawImGUIControlsWindow(glm::vec3& lightPos)
 {
     // Controls window - explicitly allow docking and moving
@@ -191,6 +160,51 @@ void Window::DrawImGUIControlsWindow(glm::vec3& lightPos)
     ImGui::End();
 }
 
+void Window::DrawSceneView(Framebuffer& framebuffer, Camera& camera, GLFWwindow* nativeWindow)
+{
+    // A static variable to track if we are currently controlling the camera
+    static bool isControllingCamera = false;
+
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    ImGui::Begin("Scene");
+
+    bool isHovered = ImGui::IsWindowHovered();
+
+    // --- NEW INPUT LOGIC ---
+
+    // 1. START controlling the camera if we right-click while hovering
+    if (isHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+    {
+        isControllingCamera = true;
+        glfwSetInputMode(nativeWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        camera.isFocused = true;
+    }
+
+    // 2. STOP controlling the camera if we release the right mouse button
+    if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+    {
+        isControllingCamera = false;
+        glfwSetInputMode(nativeWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        camera.isFocused = false;
+    }
+
+    // 3. Process mouse movement ONLY when we are in control mode
+    if (isControllingCamera)
+    {
+        ImGuiIO& io = ImGui::GetIO();
+        camera.ProcessMouseDelta(io.MouseDelta.x, io.MouseDelta.y);
+    }
+
+    // --- END NEW INPUT LOGIC ---
+
+    ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
+    uint64_t textureID = framebuffer.getTextureColorBuffer();
+    ImGui::Image(reinterpret_cast<void*>(textureID), viewportPanelSize, ImVec2(0, 1), ImVec2(1, 0));
+
+    ImGui::End();
+    ImGui::PopStyleVar();
+}
+
 void Window::swapBuffers()
 {
     // Swaps the front and back buffers
@@ -207,7 +221,6 @@ GLFWwindow* Window::getNativeWindow() const
 {
     return m_Window;
 }
-
 
 
 void Window::ImGUIRender()
