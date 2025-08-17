@@ -33,28 +33,9 @@ int main()
     Shader lightingShader("Shaders/phongLighting.vert", "Shaders/phongLighting.frag");
     Shader lightSourceShader("Shaders/LightSource.vert", "Shaders/LightSource.frag");
 
-    std::vector<Vertex> triangleVertices = {
-        // Positions                   // Normals                   // Texture Coords
-        {glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f)},
-        {glm::vec3(0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 0.0f)},
-        {glm::vec3(0.0f,  0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.5f, 1.0f)}
-    };
-
-    std::vector<unsigned int> triangleIndices {0, 1, 2};
-
-    std::vector<Texture> triangleTextures;
-    Texture brickTexture("res/brick.png", "texture_diffuse");
-    brickTexture.LoadTexture();
-    triangleTextures.push_back(std::move(brickTexture));
-
-    Mesh triangleMesh(triangleVertices, triangleIndices, triangleTextures);
-
     // Framebuffer for Imgui
     Framebuffer sceneFramebuffer(1800, 1200);
     glm::vec2 sceneViewportSize = {1800, 1200};
-
-    Sphere lightSphere(1.0f, 36, 18);
-    glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
     glfwSetWindowUserPointer(nativeWindow, &camera);
 
@@ -90,36 +71,17 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
-        glm::mat4 projection = glm::perspective(glm::radians(45.0f), sceneViewportSize.x / sceneViewportSize.y, 0.1f, 100.0f);
-        glm::mat4 view = camera.GetViewMatrix();
-        glm::mat4 model = glm::mat4(1.0f);
+        // ------------Rendering Start------------
+        std::cout << Vec4(13,12,11,0)* 2 << std::endl;;
 
-        // Draw the lit triangle
-        lightingShader.use();
-        lightingShader.setUniformValue("lightPos", lightPos);
-        lightingShader.setUniformValue("viewPos", camera.Position);
-        lightingShader.setUniformValue("lightColor", 1.0f, 1.0f, 1.0f);
-        lightingShader.setUniformValue("projection", projection);
-        lightingShader.setUniformValue("view", view);
-        model = glm::rotate(model, (float)glfwGetTime() * glm::radians(20.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-        lightingShader.setUniformValue("model", model);
-        triangleMesh.Draw(lightingShader);
 
-        // Draw the light source sphere
-        lightSourceShader.use();
-        lightSourceShader.setUniformValue("projection", projection);
-        lightSourceShader.setUniformValue("view", view);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, lightPos);
-        model = glm::scale(model, glm::vec3(0.2f));
-        lightSourceShader.setUniformValue("model", model);
-        lightSphere.Draw(lightSourceShader);
+
+        // ------------Rendering End------------
 
         sceneFramebuffer.unbind();
 
         window.startImGUIFrame();
         window.DrawSceneView(sceneFramebuffer, camera, window.getNativeWindow());
-        window.DrawImGUIControlsWindow(lightPos);
 
         window.ImGUIRender();
 
