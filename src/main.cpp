@@ -72,7 +72,8 @@ int main()
         glEnable(GL_DEPTH_TEST);
 
         // ------------Rendering Start------------
-        std::cout << Vec4(13,12,11,0)* 2 << std::endl;;
+        Vec4 bob= Project(Vec4(1, 0, 3, 0), Vec4(-1, 4, 2, 0));
+        std::cout << bob << std::endl;;
 
 
 
