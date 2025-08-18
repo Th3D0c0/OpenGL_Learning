@@ -8,6 +8,7 @@ in vec3 Normal;
 in vec2 TextCoords;
 
 uniform sampler2D texture_diffuse1;
+uniform sampler2D texture_diffuse2;
 
 // New uniforms for lighting
 uniform vec3 lightColor;

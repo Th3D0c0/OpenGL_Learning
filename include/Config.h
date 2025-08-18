@@ -2,8 +2,11 @@
 #include "Shader.h"
 #include "Mesh.h"
 #include "Camera.h"
-#include "Sphere.h"
+#include "Shapes/Sphere.h"
 #include "Framebuffer.h"
+#include "Shapes/Cube.h"
+#include "Voxel/Chunk.h"
+#include "Voxel/BlockRegistry.h"
 
 #include <iostream>
 #include <vector>

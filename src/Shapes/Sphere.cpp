@@ -1,5 +1,5 @@
 #include <Texture.h>
-#include "Sphere.h"
+#include "Shapes/Sphere.h"
 #include <vector>
 #include <cmath>
 
@@ -11,7 +11,8 @@
 
 Sphere::Sphere(float radius, int sectorCount, int stackCount)
 	:Mesh(
-		[&]() {
+		[&]() 
+        {
             std::vector<Vertex> vertices;
             const float PI = M_PI;
             Vertex vertex;

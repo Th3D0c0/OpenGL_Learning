@@ -12,7 +12,7 @@ void glfw_error_callback(int error, const char* description)
 }
 
 Window::Window(int width, int height, const char* title, bool fullscreen)
-    :m_CursorEnabled {true}
+    :m_CursorEnabled {true}, m_Window(NULL)
 {
     // 1. Initialize GLFW
     glfwSetErrorCallback(glfw_error_callback);

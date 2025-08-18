@@ -31,7 +31,6 @@ bool Texture::LoadTexture()
 	glGenTextures(1, &m_TextureID);
 	glBindTexture(GL_TEXTURE_2D, m_TextureID);
 
-	// FIX: Determine the correct image format instead of assuming RGBA
 	GLenum format = GL_RGB;
 	if (m_BitDepth == 4)
 	{
@@ -45,7 +44,6 @@ bool Texture::LoadTexture()
 	{
 		format = GL_RED; // For grayscale images
 	}
-
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -62,7 +60,7 @@ bool Texture::LoadTexture()
 	return true;
 }
 
-void Texture::bind(GLuint textureUnit) const
+void Texture::bind(unsigned int textureUnit) const
 {
 	glActiveTexture(GL_TEXTURE0 + textureUnit);
 	glBindTexture(GL_TEXTURE_2D, m_TextureID);

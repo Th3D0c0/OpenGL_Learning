@@ -56,6 +56,32 @@ int main()
     Sphere lightSphere(1.0f, 36, 18);
     glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
+    Cube cube(1.0f, 1.0f, 1.0f);
+
+    // ___Chunk Test___
+    BlockRegistry registry;
+    Block stoneProp;
+    stoneProp.name = "Stone";
+    registry.RegisterBlock(BlockID::Stone, stoneProp);
+
+    Block airProp;
+    airProp.name = "Air";
+    airProp.isSolid = false;
+    registry.RegisterBlock(BlockID::Air, airProp);
+  
+
+    Chunk chunk;
+    for (int x = 0; x < Chunk::CHUNK_SIZE; x++)
+    {
+        for (int z = 0; z < Chunk::CHUNK_SIZE; z++)
+        {
+            chunk.setBlock(x, 5, z, BlockID::Stone);
+        }
+    }
+    chunk.setBlock(5, 6, 5, BlockID::Stone);
+    chunk.generateMesh(registry);
+
+
     glfwSetWindowUserPointer(nativeWindow, &camera);
 
     // --- MAIN LOOP ---
@@ -101,9 +127,13 @@ int main()
         lightingShader.setUniformValue("lightColor", 1.0f, 1.0f, 1.0f);
         lightingShader.setUniformValue("projection", projection);
         lightingShader.setUniformValue("view", view);
-        model = glm::rotate(model, (float)glfwGetTime() * glm::radians(20.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+
+
+        /*model = glm::rotate(model, (float)glfwGetTime() * glm::radians(20.0f), glm::vec3(0.5f, 1.0f, 0.0f));*/
         lightingShader.setUniformValue("model", model);
-        triangleMesh.Draw(lightingShader);
+        chunk.draw(lightingShader);
+
+
 
         // Draw the light source sphere
         lightSourceShader.use();
