@@ -33,21 +33,21 @@ int main()
     Shader lightingShader("Shaders/phongLighting.vert", "Shaders/phongLighting.frag");
     Shader lightSourceShader("Shaders/LightSource.vert", "Shaders/LightSource.frag");
 
-    std::vector<Vertex> triangleVertices = {
-        // Positions                   // Normals                   // Texture Coords
-        {glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f)},
-        {glm::vec3(0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 0.0f)},
-        {glm::vec3(0.0f,  0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.5f, 1.0f)}
-    };
+    //std::vector<Vertex> triangleVertices = {
+    //    // Positions                   // Normals                   // Texture Coords
+    //    {glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f)},
+    //    {glm::vec3(0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 0.0f)},
+    //    {glm::vec3(0.0f,  0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.5f, 1.0f)}
+    //};
 
-    std::vector<unsigned int> triangleIndices {0, 1, 2};
+    //std::vector<unsigned int> triangleIndices {0, 1, 2};
 
-    std::vector<Texture> triangleTextures;
-    Texture brickTexture("res/brick.png", "texture_diffuse");
-    brickTexture.LoadTexture();
-    triangleTextures.push_back(std::move(brickTexture));
+    //std::vector<Texture> triangleTextures;
+    //Texture brickTexture("res/brick.png", "texture_diffuse");
+    //brickTexture.LoadTexture();
+    //triangleTextures.push_back(std::move(brickTexture));
 
-    Mesh triangleMesh(triangleVertices, triangleIndices, triangleTextures);
+    //Mesh triangleMesh(triangleVertices, triangleIndices, triangleTextures);
 
     // Framebuffer for Imgui
     Framebuffer sceneFramebuffer(1800, 1200);
@@ -55,6 +55,9 @@ int main()
 
     Sphere lightSphere(1.0f, 36, 18);
     glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+
+    Sphere instancedSphere(0.1, 6, 4);
+    ParticleSystem spherePS(instancedSphere, 100000);
 
     glfwSetWindowUserPointer(nativeWindow, &camera);
 
@@ -103,7 +106,10 @@ int main()
         lightingShader.setUniformValue("view", view);
         model = glm::rotate(model, (float)glfwGetTime() * glm::radians(20.0f), glm::vec3(0.5f, 1.0f, 0.0f));
         lightingShader.setUniformValue("model", model);
-        triangleMesh.Draw(lightingShader);
+
+        spherePS.Update(deltaTime);
+        instancedSphere.Draw(lightingShader, 10000);
+  /*      triangleMesh.Draw(lightingShader);*/
 
         // Draw the light source sphere
         lightSourceShader.use();

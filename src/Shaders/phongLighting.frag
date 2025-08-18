@@ -6,6 +6,7 @@ out vec4 FragColor;
 in vec3 FragPos;
 in vec3 Normal;
 in vec2 TextCoords;
+in vec4 ParticleColor;
 
 uniform sampler2D texture_diffuse1;
 
@@ -40,6 +41,6 @@ void main()
 
     vec4 textureColor = texture(texture_diffuse1, TextCoords);
     // --- Final Color ---
-    vec3 result = (ambient + diffuse + specular) * textureColor.rgb;
-    FragColor = vec4(result, 1.0);
+    vec3 result = (ambient + diffuse + specular) * textureColor.rgb * ParticleColor.rgb;
+    FragColor = vec4(result, 1.0f);
 }

@@ -34,6 +34,8 @@ Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>&
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(struct Vertex, TextCoord));
     glEnableVertexAttribArray(2);
 
+    // Info: Particle System takes the next 3 Attribute locations
+
     // Unbind the VAO to prevent accidental modification
     glBindVertexArray(0);
 }
@@ -74,8 +76,44 @@ void Mesh::Draw(Shader& shader)
     }
 
     // Draw the mesh
-    glBindVertexArray(m_VAO);
+    glBindVertexArray(m_VAO);   
     glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+
+    // Always good practice to set everything back to defaults once configured.
+    glActiveTexture(GL_TEXTURE0);
+}
+
+void Mesh::Draw(Shader& shader, unsigned int instanceCount)
+{
+    // Counters for texture types to build the uniform names
+    unsigned int diffuseNr = 1;
+    unsigned int specularNr = 1;
+
+    for (unsigned int i = 0; i < m_Textures.size(); i++)
+    {
+        std::string number;
+        std::string type = m_Textures[i].getType();
+
+        if (type == "texture_diffuse")
+        {
+            number = std::to_string(diffuseNr++);
+        }
+        else if (type == "texture_specular")
+        {
+            number = std::to_string(specularNr++);
+        }
+
+        // Set the sampler uniform in the shader (e.g., "texture_diffuse1")
+        shader.setUniformValue((type + number), (int)i);
+
+        // Bind the texture to the correct texture unit
+        m_Textures[i].bind(i);
+    }
+
+
+    glBindVertexArray(m_VAO);
+    glDrawElementsInstanced(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0, instanceCount);
     glBindVertexArray(0);
 
     // Always good practice to set everything back to defaults once configured.

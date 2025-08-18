@@ -16,6 +16,8 @@ public:
 
     // Renders the mesh
     void Draw(Shader& shader);
+    void Draw(Shader& shader, unsigned int instanceCount);
+    unsigned int GetVAO() const  { return m_VAO; }
 
 protected:
     unsigned int m_VAO; // Vertex Array Object

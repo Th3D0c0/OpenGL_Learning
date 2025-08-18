@@ -4,6 +4,7 @@
 #include "Camera.h"
 #include "Sphere.h"
 #include "Framebuffer.h"
+#include "ParticleSystem/ParticleSystem.h"
 
 #include <iostream>
 #include <vector>
