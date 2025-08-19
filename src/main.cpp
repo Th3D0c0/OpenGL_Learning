@@ -11,11 +11,15 @@ extern "C" {
 #endif
 
 // Global Camera and Timing
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-float deltaTime = 0.0f;
-float lastFrame = 0.0f;
+Camera camera(glm::vec3(0.0f, 0.5f, 3.0f));
+double deltaTime = 0.0f;
+double lastFrame = 0.0f;
 int frameCount = 0;
 double timeSinceLastTitleUpdate = 0.0;
+
+// Physics
+double accumulator = 0.0;
+const double fixedDeltaTime = 1.0 / 60.0; 
 
 void process_app_input(GLFWwindow* window)
 {
@@ -32,39 +36,49 @@ int main()
     // --- Shaders and Objects ---
     Shader lightingShader("Shaders/phongLighting.vert", "Shaders/phongLighting.frag");
     Shader lightSourceShader("Shaders/LightSource.vert", "Shaders/LightSource.frag");
+    Shader particleShader("Shaders/ParticleShaders/particle.vert", "Shaders/ParticleShaders/particle.frag");
 
-    //std::vector<Vertex> triangleVertices = {
-    //    // Positions                   // Normals                   // Texture Coords
-    //    {glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f)},
-    //    {glm::vec3(0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 0.0f)},
-    //    {glm::vec3(0.0f,  0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.5f, 1.0f)}
-    //};
+    std::vector<Vertex> rectangleVertices = {
+        // Positions                      // Normals                     // Texture Coords
+        {glm::vec3(-0.5f, 0.0f, -0.5f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f)}, // Bottom Left
+        {glm::vec3(0.5f, 0.0f, -0.5f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(1.0f, 0.0f)}, // Bottom Right
+        {glm::vec3(0.5f, 0.0f,  0.5f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(1.0f, 1.0f)}, // Top Right
+        {glm::vec3(-0.5f, 0.0f,  0.5f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.0f, 1.0f)}  // Top Left
+    };
 
-    //std::vector<unsigned int> triangleIndices {0, 1, 2};
+    // Indices to draw two triangles that form the rectangle
+    std::vector<unsigned int> rectangleIndices = {
+        0, 1, 2, // First triangle
+        2, 3, 0  // Second triangle
+    };
 
-    //std::vector<Texture> triangleTextures;
-    //Texture brickTexture("res/brick.png", "texture_diffuse");
-    //brickTexture.LoadTexture();
-    //triangleTextures.push_back(std::move(brickTexture));
+    std::vector<Texture> rectangleTextures;
+    Texture groundTexture("res/brick.png", "texture_diffuse");
+    groundTexture.LoadTexture();
+    rectangleTextures.push_back(std::move(groundTexture));
 
-    //Mesh triangleMesh(triangleVertices, triangleIndices, triangleTextures);
+    Mesh rectangleMesh(rectangleVertices, rectangleIndices, rectangleTextures);
 
     // Framebuffer for Imgui
     Framebuffer sceneFramebuffer(1800, 1200);
     glm::vec2 sceneViewportSize = {1800, 1200};
 
     Sphere lightSphere(1.0f, 36, 18);
-    glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+    glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
 
-    Sphere instancedSphere(0.1, 6, 4);
-    ParticleSystem spherePS(instancedSphere, 100000);
+    Sphere BoundarySphere(2.0f, 36, 18);
+    glm::vec3 BoundarySpherePos(0.0f, 0.0f, 0.0f);
+
+    Sphere instancedSphere(0.3f, 12, 8);
+    ParticleSystem spherePS(instancedSphere, 1);
 
     glfwSetWindowUserPointer(nativeWindow, &camera);
 
     // --- MAIN LOOP ---
     while (!window.shouldClose())
     {
-        float currentFrame = static_cast<float>(glfwGetTime());
+        window.pollEvents();
+        double currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
@@ -93,23 +107,39 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
+        // Physics start
+        accumulator += deltaTime;   
+
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), sceneViewportSize.x / sceneViewportSize.y, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 model = glm::mat4(1.0f);
 
-        // Draw the lit triangle
+        // Object Shader / DrawCalls
         lightingShader.use();
         lightingShader.setUniformValue("lightPos", lightPos);
         lightingShader.setUniformValue("viewPos", camera.Position);
         lightingShader.setUniformValue("lightColor", 1.0f, 1.0f, 1.0f);
         lightingShader.setUniformValue("projection", projection);
         lightingShader.setUniformValue("view", view);
-        model = glm::rotate(model, (float)glfwGetTime() * glm::radians(20.0f), glm::vec3(0.5f, 1.0f, 0.0f));
         lightingShader.setUniformValue("model", model);
+        rectangleMesh.Draw(lightingShader);
+        BoundarySphere.Draw(lightingShader, true, false);
 
-        spherePS.Update(deltaTime);
-        instancedSphere.Draw(lightingShader, 10000);
-  /*      triangleMesh.Draw(lightingShader);*/
+        // Particles Shader / DrawCalls
+        particleShader.use();
+        particleShader.setUniformValue("lightPos", lightPos);
+        particleShader.setUniformValue("viewPos", camera.Position);
+        particleShader.setUniformValue("lightColor", 1.0f, 1.0f, 1.0f);
+        particleShader.setUniformValue("projection", projection);
+        particleShader.setUniformValue("view", view);
+        particleShader.setUniformValue("model", model);
+        while (accumulator >= fixedDeltaTime)
+        {
+            spherePS.Update(fixedDeltaTime);
+            accumulator -= fixedDeltaTime;
+        }
+            spherePS.Draw(particleShader);
+
 
         // Draw the light source sphere
         lightSourceShader.use();
@@ -127,10 +157,12 @@ int main()
         window.DrawSceneView(sceneFramebuffer, camera, window.getNativeWindow());
         window.DrawImGUIControlsWindow(lightPos);
 
-        window.ImGUIRender();
+        ImGui::Begin("GetPosition");
+        ImGui::Text("Position x: %f", spherePS.GetCurrentPosition());
+        ImGui::End();
 
+        window.ImGUIRender();
         window.swapBuffers();
-        window.pollEvents();
     }
 
     // --- CLEANUP ---

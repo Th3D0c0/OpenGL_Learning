@@ -37,6 +37,17 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(glm glfw)
 
+# --- Assimp ---
+set(ASSIMP_BUILD_TESTS OFF)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
+FetchContent_Declare(
+  assimp
+  GIT_REPOSITORY https://github.com/assimp/assimp.git
+  GIT_TAG        v6.0.2 # Or another official release tag
+)
+
+FetchContent_MakeAvailable(glm glfw assimp)
+
 # -----------------------------------------------------------------------------
 # Build GLEW from local source
 # -----------------------------------------------------------------------------
@@ -73,13 +84,6 @@ target_include_directories(imgui PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/imgui"
     "${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/imgui/backends"
 )
-
-# -----------------------------------------------------------------------------
-# ## NEW: Build Assimp from local source using its own CMakeLists
-# -----------------------------------------------------------------------------
-set(ASSIMP_BUILD_TESTS OFF)
-set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/assimp")
 
 # -----------------------------------------------------------------------------
 # Executable Configuration

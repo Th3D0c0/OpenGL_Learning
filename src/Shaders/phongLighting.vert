@@ -4,13 +4,6 @@ layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec2 aTextCoord;
 
-
-// Particle System Values
-layout (location = 3) in vec3 aParticlePos;
-layout (location = 4) in vec4 aParticleColor;
-
-out vec4 ParticleColor;
-
 out vec3 FragPos;
 out vec3 Normal;
 out vec2 TextCoords;
@@ -24,9 +17,6 @@ void main()
     FragPos = vec3(model * vec4(aPos, 1.0f));
     Normal = mat3(transpose(inverse(model))) * aNormal;
     TextCoords = vec2(aTextCoord);
-    ParticleColor = aParticleColor;
 
-    vec3 finalPos = aPos + aParticlePos;
-    vec4 worldPos = model * vec4(finalPos, 1.0);
-    gl_Position = projection * view * worldPos;
+    gl_Position = projection * view * vec4(FragPos, 1.0f);
 }

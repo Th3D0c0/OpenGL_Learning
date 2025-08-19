@@ -48,40 +48,57 @@ Mesh::~Mesh()
     glDeleteBuffers(1, &m_EBO);
 }
 
-void Mesh::Draw(Shader& shader)
+void Mesh::Draw(Shader& shader, bool isTriangle, bool useTexture)
 {
-    // Counters for texture types to build the uniform names
-    unsigned int diffuseNr = 1;
-    unsigned int specularNr = 1;
 
-    for (unsigned int i = 0; i < m_Textures.size(); i++)
+    if (useTexture)
     {
-        std::string number;
-        std::string type = m_Textures[i].getType();
+        // Counters for texture types to build the uniform names
+        unsigned int diffuseNr = 1;
+        unsigned int specularNr = 1;
 
-        if (type == "texture_diffuse")
+        for (unsigned int i = 0; i < m_Textures.size(); i++)
         {
-            number = std::to_string(diffuseNr++);
-        }
-        else if (type == "texture_specular")
-        {
-            number = std::to_string(specularNr++);
-        }
+            std::string number;
+            std::string type = m_Textures[i].getType();
 
-        // Set the sampler uniform in the shader (e.g., "texture_diffuse1")
-        shader.setUniformValue((type + number), (int)i);
+            if (type == "texture_diffuse")
+            {
+                number = std::to_string(diffuseNr++);
+            }
+            else if (type == "texture_specular")
+            {
+                number = std::to_string(specularNr++);
+            }
 
-        // Bind the texture to the correct texture unit
-        m_Textures[i].bind(i);
+            // Set the sampler uniform in the shader (e.g., "texture_diffuse1")
+            shader.setUniformValue((type + number), (int)i);
+
+            // Bind the texture to the correct texture unit
+            m_Textures[i].bind(i);
+        }
     }
 
-    // Draw the mesh
-    glBindVertexArray(m_VAO);   
-    glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
 
-    // Always good practice to set everything back to defaults once configured.
-    glActiveTexture(GL_TEXTURE0);
+
+    if (isTriangle)
+    {
+        glBindVertexArray(m_VAO);
+        glDrawElements(GL_LINES, m_Indices.size(), GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+
+        glActiveTexture(GL_TEXTURE0);
+    }
+    else
+    {
+        // Draw the mesh
+        glBindVertexArray(m_VAO);
+        glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+
+        // Always good practice to set everything back to defaults once configured.
+        glActiveTexture(GL_TEXTURE0);
+    }
 }
 
 void Mesh::Draw(Shader& shader, unsigned int instanceCount)

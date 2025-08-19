@@ -15,7 +15,7 @@ public:
     ~Mesh();
 
     // Renders the mesh
-    void Draw(Shader& shader);
+    void Draw(Shader& shader, bool isTriangle = false, bool useTexture = true);
     void Draw(Shader& shader, unsigned int instanceCount);
     unsigned int GetVAO() const  { return m_VAO; }
 
