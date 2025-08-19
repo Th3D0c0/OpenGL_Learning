@@ -50,7 +50,7 @@ void ParticleSystem::Update(double dt)
 		{
 			Particle p;
 
-			glm::vec3 initialVelocity = glm::vec3{0.0f, 0.0f, 0.0f};
+			glm::vec3 initialVelocity = glm::vec3{(float)RandomNumInRange(-1, 1), (float)RandomNumInRange(-1, 1), (float)RandomNumInRange(-1, 1)};
 			p.currentPosition = glm::vec3(0.0f, 0.0f, 0.0f);
 			p.oldPosition = p.currentPosition - initialVelocity * (float)dt;
 

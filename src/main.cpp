@@ -70,7 +70,7 @@ int main()
     glm::vec3 BoundarySpherePos(0.0f, 0.0f, 0.0f);
 
     Sphere instancedSphere(0.3f, 12, 8);
-    ParticleSystem spherePS(instancedSphere, 1);
+    ParticleSystem spherePS(instancedSphere, 2);
 
     glfwSetWindowUserPointer(nativeWindow, &camera);
 
@@ -156,10 +156,6 @@ int main()
         window.startImGUIFrame();
         window.DrawSceneView(sceneFramebuffer, camera, window.getNativeWindow());
         window.DrawImGUIControlsWindow(lightPos);
-
-        ImGui::Begin("GetPosition");
-        ImGui::Text("Position x: %f", spherePS.GetCurrentPosition());
-        ImGui::End();
 
         window.ImGUIRender();
         window.swapBuffers();
