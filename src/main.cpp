@@ -66,11 +66,11 @@ int main()
     Sphere lightSphere(1.0f, 36, 18);
     glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
 
-    Sphere BoundarySphere(2.0f, 36, 18);
+    Sphere BoundarySphere(8.0f, 36, 18);
     glm::vec3 BoundarySpherePos(0.0f, 0.0f, 0.0f);
 
     Sphere instancedSphere(1.0f, 16, 12);
-    ParticleSystem spherePS(instancedSphere, 10);
+    ParticleSystem spherePS(instancedSphere, 5000);
 
     glfwSetWindowUserPointer(nativeWindow, &camera);
 

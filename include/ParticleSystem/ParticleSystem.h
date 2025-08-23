@@ -51,6 +51,13 @@ struct Particle
 	}
 };
 
+struct ParticleGPU
+{
+	glm::vec3 position;
+	glm::vec4 color;
+	float scale;
+};
+
 
 class ParticleSystem
 {
@@ -72,9 +79,9 @@ private:
 
 	glm::ivec3 GetCellCoords(const glm::vec3& pos);
 	int64_t GetHashCoords(const glm::ivec3& coords);
-	int64_t GetHashCoords(int ix, int iy, int iz);
 
 	std::vector<Particle> m_Particles;
+	std::vector<ParticleGPU> m_ParticlesGPU;
 	Mesh m_Mesh;
 	unsigned int m_VBO;
 	unsigned int m_MaxParticleCount;
@@ -82,9 +89,4 @@ private:
 
 	std::unordered_map<int64_t, std::vector<Particle*>> m_SpacialHash;
 	float m_CellSize;
-	const int m_P1;
-	const int m_P2;
-	const int m_P3;
-
-
 };
