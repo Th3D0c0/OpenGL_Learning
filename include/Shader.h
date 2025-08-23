@@ -15,7 +15,7 @@ public:
     // Destructor to clean up the shader program
     ~Shader();
 
-    int Shader::getUniformLocation(const std::string& name) const;
+    int getUniformLocation(const std::string& name) const;
 
     // Use/activate the shader
     void use();

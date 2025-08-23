@@ -5,6 +5,9 @@
 #include "Mesh.h"
 #include "Shader.h"
 #include <iostream>
+#include <unordered_map>
+#include <cmath>
+#include <cstdint>
 
 
 struct Particle
@@ -56,18 +59,32 @@ public:
 	~ParticleSystem();
 
 	void Update(double dt);
-	void UpdatePosition(float dt);
 	void Draw(Shader& shader);
-	void ApplyConstraints();
 	float GetCurrentPosition();
+	int GetParticleCount();
 
 	float timeInterval;
 
 private:
+	void ApplySphereConstraints(Particle& particle);
+	void ApplyParticleCollisionBF();
+	void ApplyParticleCollisionSP(Particle& obj);
+
+	glm::ivec3 GetCellCoords(const glm::vec3& pos);
+	int64_t GetHashCoords(const glm::ivec3& coords);
+	int64_t GetHashCoords(int ix, int iy, int iz);
+
 	std::vector<Particle> m_Particles;
-	Mesh m_mesh;
+	Mesh m_Mesh;
 	unsigned int m_VBO;
 	unsigned int m_MaxParticleCount;
 	glm::vec3 m_Gravity;
+
+	std::unordered_map<int64_t, std::vector<Particle*>> m_SpacialHash;
+	float m_CellSize;
+	const int m_P1;
+	const int m_P2;
+	const int m_P3;
+
 
 };

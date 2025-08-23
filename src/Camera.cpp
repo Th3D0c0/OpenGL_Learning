@@ -51,6 +51,7 @@ void Camera::ProcessInput(GLFWwindow* window, float deltaTime)
 void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
 {
     if (isFocused != true) return;
+
     float velocity = MovementSpeed * deltaTime;
     if (direction == FORWARD)
         Position += Front * velocity;
@@ -61,9 +62,9 @@ void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
     if (direction == RIGHT)
         Position += Right * velocity;
     if (direction == DOWN)
-        Position -= WorldUp * glm::vec3(0.0f, 2.0f, 0.0f) * deltaTime;
+        Position -= WorldUp * velocity;
     if (direction == UP)
-        Position += WorldUp * glm::vec3(0.0f, 2.0f, 0.0f) * deltaTime;
+        Position += WorldUp * velocity;
 }
 
 // Update ProcessMouseMovement to handle the first-mouse logic

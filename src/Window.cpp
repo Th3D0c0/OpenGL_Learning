@@ -1,4 +1,4 @@
-#include "Window.h"
+    #include "Window.h"
 #include <iostream>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -77,6 +77,9 @@ Window::Window(int width, int height, const char* title, bool fullscreen)
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
+
+    io.IniFilename = "../../../imgui.ini";
+
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;

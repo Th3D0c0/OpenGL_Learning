@@ -7,7 +7,6 @@
 Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, std::vector<Texture> textures)
     : m_Vertices(vertices), m_Indices(indices), m_Textures(std::move(textures))
 {
-
     // Generate and bind the VAO and VBO
     glGenVertexArrays(1, &m_VAO);
     glGenBuffers(1, &m_VBO);
@@ -38,6 +37,8 @@ Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>&
 
     // Unbind the VAO to prevent accidental modification
     glBindVertexArray(0);
+
+    m_AABB = CreateAABB(m_Vertices);
 }
 
 Mesh::~Mesh()
@@ -135,4 +136,25 @@ void Mesh::Draw(Shader& shader, unsigned int instanceCount)
 
     // Always good practice to set everything back to defaults once configured.
     glActiveTexture(GL_TEXTURE0);
+}
+
+AABB Mesh::CreateAABB(std::vector<Vertex>& vertices)
+{
+    AABB result;
+    if (vertices.size() <= 0) return result;
+
+    result.min = vertices[0].Position;
+    result.max = vertices[0].Position;
+
+    for (int i = 1; i < vertices.size(); i++)
+    {
+        result.min.x = glm::min(result.min.x, vertices[i].Position.x);
+        result.min.y = glm::min(result.min.y, vertices[i].Position.y);
+        result.min.z = glm::min(result.min.z, vertices[i].Position.z);
+
+        result.max.x = glm::max(result.max.x, vertices[i].Position.x);
+        result.max.y = glm::max(result.max.y, vertices[i].Position.y);
+        result.max.z = glm::max(result.max.z, vertices[i].Position.z);
+    }
+    return result;
 }

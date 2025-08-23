@@ -17,7 +17,11 @@ public:
     // Renders the mesh
     void Draw(Shader& shader, bool isTriangle = false, bool useTexture = true);
     void Draw(Shader& shader, unsigned int instanceCount);
-    unsigned int GetVAO() const  { return m_VAO; }
+    
+    AABB CreateAABB(std::vector<Vertex>& vertices);
+
+    unsigned int GetVAO() const { return m_VAO; }
+    AABB GetAABB() { return m_AABB; }
 
 protected:
     unsigned int m_VAO; // Vertex Array Object
@@ -27,4 +31,6 @@ protected:
     std::vector<Vertex> m_Vertices;
     std::vector<unsigned int> m_Indices;
     std::vector<Texture> m_Textures;
+
+    AABB m_AABB;
 };

@@ -69,8 +69,8 @@ int main()
     Sphere BoundarySphere(2.0f, 36, 18);
     glm::vec3 BoundarySpherePos(0.0f, 0.0f, 0.0f);
 
-    Sphere instancedSphere(0.3f, 12, 8);
-    ParticleSystem spherePS(instancedSphere, 2);
+    Sphere instancedSphere(1.0f, 16, 12);
+    ParticleSystem spherePS(instancedSphere, 10);
 
     glfwSetWindowUserPointer(nativeWindow, &camera);
 
@@ -141,6 +141,7 @@ int main()
             spherePS.Draw(particleShader);
 
 
+
         // Draw the light source sphere
         lightSourceShader.use();
         lightSourceShader.setUniformValue("projection", projection);
@@ -154,6 +155,9 @@ int main()
         sceneFramebuffer.unbind();
 
         window.startImGUIFrame();
+        ImGui::Begin("Count");
+        ImGui::Value("Value: %d", spherePS.GetParticleCount());
+        ImGui::End();
         window.DrawSceneView(sceneFramebuffer, camera, window.getNativeWindow());
         window.DrawImGUIControlsWindow(lightPos);
 
