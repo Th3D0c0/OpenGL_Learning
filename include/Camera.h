@@ -35,6 +35,7 @@ public:
     float Yaw;
     float Pitch;
     // camera options
+    float scroll = 1.0f;
     float MovementSpeed;
     float MouseSensitivity;
 
@@ -43,16 +44,17 @@ public:
     // constructor
     Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH);
 
-    glm::mat4 GetViewMatrix();
+    glm::mat4 GetViewMatrix() const;
 
     void ProcessKeyboard(Camera_Movement direction, float deltaTime);
     void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch = true);
     void ProcessMouseDelta(float xoffset, float yoffset, bool constrainPitch = true);
     // Processes keyboard input from a GLFW window
-    void ProcessInput(GLFWwindow* window, float deltaTime);
+    void ProcessInput(GLFWwindow* window, double deltaTime);
 
     // Static callback function that GLFW will call
     static void MouseCallback(GLFWwindow* window, double xpos, double ypos);
+    void setScrollCallback(GLFWwindow* window);
 
     void SetFirstMouse(bool value) { m_firstMouse = value; };
 
@@ -65,6 +67,6 @@ private:
     float m_lastY;
     bool m_firstMouse;
 
-private:
     void updateCameraVectors();
+    static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 };

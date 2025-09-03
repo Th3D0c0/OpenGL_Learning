@@ -5,6 +5,7 @@
 #include "Sphere.h"
 #include "Framebuffer.h"
 #include "ParticleSystem/ParticleSystem.h"
+#include "PlanetGenerator/PlanetGen.h"
 
 #include <iostream>
 #include <vector>

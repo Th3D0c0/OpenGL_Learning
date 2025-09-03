@@ -40,7 +40,6 @@ Window::Window(int width, int height, const char* title, bool fullscreen)
     m_Window = glfwCreateWindow(width, height, title, monitor, NULL);
 
     // 3. Create the GLFW window
-    ;
     if (!m_Window)
     {
         std::cerr << "Failed to create GLFW window" << std::endl;
@@ -94,6 +93,7 @@ Window::Window(int width, int height, const char* title, bool fullscreen)
     }
     ImGui_ImplGlfw_InitForOpenGL(m_Window, true);
     ImGui_ImplOpenGL3_Init("#version 460");
+
 }
 
 Window::~Window()
@@ -188,7 +188,7 @@ void Window::DrawSceneView(Framebuffer& framebuffer, Camera& camera, GLFWwindow*
     {
         isControllingCamera = true;
         glfwSetInputMode(nativeWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        camera.isFocused = true;
+        camera.isFocused = true; 
     }
 
     // 2. STOP controlling the camera if we release the right mouse button

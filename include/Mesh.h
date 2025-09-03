@@ -15,7 +15,7 @@ public:
     ~Mesh();
 
     // Renders the mesh
-    void Draw(Shader& shader, bool isTriangle = false, bool useTexture = true);
+    void Draw(Shader& shader, bool isWireframe = false, bool useTexture = true);
     void Draw(Shader& shader, unsigned int instanceCount);
     
     AABB CreateAABB(std::vector<Vertex>& vertices);

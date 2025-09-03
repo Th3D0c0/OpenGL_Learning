@@ -221,10 +221,7 @@ inline int64_t ParticleSystem::GetHashCoords(const glm::ivec3& coords)
 
 float ParticleSystem::GetCurrentPosition()
 {
-	for (Particle& particle : m_Particles)
-	{
-		return particle.velocity.x;
-	}
+		return m_Particles[0].velocity.x;
 }
 
 int ParticleSystem::GetParticleCount()	

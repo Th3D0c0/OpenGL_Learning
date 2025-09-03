@@ -49,7 +49,7 @@ Mesh::~Mesh()
     glDeleteBuffers(1, &m_EBO);
 }
 
-void Mesh::Draw(Shader& shader, bool isTriangle, bool useTexture)
+void Mesh::Draw(Shader& shader, bool isWireframe, bool useTexture)
 {
 
     if (useTexture)
@@ -80,9 +80,7 @@ void Mesh::Draw(Shader& shader, bool isTriangle, bool useTexture)
         }
     }
 
-
-
-    if (isTriangle)
+    if (isWireframe)
     {
         glBindVertexArray(m_VAO);
         glDrawElements(GL_LINES, m_Indices.size(), GL_UNSIGNED_INT, 0);

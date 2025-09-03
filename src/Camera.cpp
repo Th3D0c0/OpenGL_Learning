@@ -14,9 +14,9 @@ Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch) :
     Front(glm::vec3(0.0f, 0.0f, -1.0f)),
     MovementSpeed(SPEED),
     MouseSensitivity(SENSITIVITY),
-    m_lastX(0.0f), // Initialize
-    m_lastY(0.0f), // Initialize
-    m_firstMouse(true) // Initialize
+    m_lastX(0.0f),
+    m_lastY(0.0f), 
+    m_firstMouse(true)
 {
 
     Position = position;
@@ -26,14 +26,13 @@ Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch) :
     updateCameraVectors();
 }
 
-glm::mat4 Camera::GetViewMatrix()
+glm::mat4 Camera::GetViewMatrix() const 
 {
     return glm::lookAt(Position, Position + Front, Up);
 }
 
-void Camera::ProcessInput(GLFWwindow* window, float deltaTime)
+void Camera::ProcessInput(GLFWwindow* window, double deltaTime)
 {
-    
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -52,7 +51,7 @@ void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
 {
     if (isFocused != true) return;
 
-    float velocity = MovementSpeed * deltaTime;
+    float velocity = MovementSpeed* scroll * deltaTime;
     if (direction == FORWARD)
         Position += Front * velocity;
     if (direction == BACKWARD)
@@ -133,6 +132,11 @@ void Camera::MouseCallback(GLFWwindow* window, double xpos, double ypos)
     }
 }
 
+void Camera::setScrollCallback(GLFWwindow* window)
+{
+    glfwSetScrollCallback(window, scroll_callback);
+}
+
 void Camera::updateCameraVectors()
 {
     glm::vec3 front;
@@ -142,4 +146,22 @@ void Camera::updateCameraVectors()
     Front = glm::normalize(front);
     Right = glm::normalize(glm::cross(Front, WorldUp));
     Up = glm::normalize(glm::cross(Right, Front));
+}
+
+void Camera::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    // You can retrieve your camera object like this if you've set it up
+    Camera* camera = static_cast<Camera*>(glfwGetWindowUserPointer(window));
+    if (camera)
+    {
+        if (yoffset > 0.0)
+        {
+			camera->scroll += 0.1f;
+        }
+        if (yoffset < 0.0)
+        {
+        	camera->scroll -= 0.1f;
+        }
+        printf("%f", xoffset);
+    }
 }
