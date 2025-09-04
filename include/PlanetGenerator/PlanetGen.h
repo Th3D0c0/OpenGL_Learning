@@ -6,6 +6,7 @@
 #include "MeshData.h"
 #include "Shader.h"
 #include "Transform.h"
+#include "FastNoiseLite.h"
 
 class Planet
 {
@@ -33,7 +34,7 @@ private:
 
 	void UpdateMeshBuffers();
 	void SetupMesh();
-
+	std::vector<float> GenerateNoise(unsigned int resolution);
 
 	std::vector<float> m_DensityValues;
 	int m_CurrentResolution;
@@ -46,4 +47,6 @@ private:
 	unsigned int m_EBO;
 
 	std::unique_ptr<Shader> m_Shader;
+
+	FastNoiseLite m_Noise;
 };;

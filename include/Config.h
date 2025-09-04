@@ -6,6 +6,7 @@
 #include "Framebuffer.h"
 #include "ParticleSystem/ParticleSystem.h"
 #include "PlanetGenerator/PlanetGen.h"
+#include "Skybox/Skybox.h"
 
 #include <iostream>
 #include <vector>

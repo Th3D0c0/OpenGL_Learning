@@ -7,6 +7,7 @@
 Planet::Planet()
 {
 	SetupMesh();
+	m_Noise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
 }
 
 Planet::~Planet()
@@ -133,6 +134,8 @@ void Planet::DrawPlanet(glm::mat4 viewMat4, glm::mat4 projMat4, const glm::vec3&
 	m_Shader->setUniformValue("viewPos", viewPos);
 	m_Shader->setUniformValue("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
 
+
+
 	glBindVertexArray(m_VAO);
 	glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
@@ -172,6 +175,8 @@ std::vector<float> Planet::CreateSphereDensityMap(float radius, unsigned int res
 	glm::vec3 center(resolution/2.0f, resolution / 2.0f, resolution / 2.0f);
 	std::vector<float> outDensities(resolution * resolution * resolution);
 
+	float noiseStrength = radius * 0.2f;
+	float scale = 0.05f;
 	for (int x = 0; x < resolution; x++)
 	{
 		for (int y = 0; y < resolution; y++)
@@ -181,12 +186,31 @@ std::vector<float> Planet::CreateSphereDensityMap(float radius, unsigned int res
 				float distToCenter = glm::distance(glm::vec3(x, y, z), center);
 				float density = distToCenter - radius;
 
+				density += m_Noise.GetNoise((float)x * scale,(float)y * scale,(float) z * scale) * noiseStrength;
+
 				int index = x + y * resolution + z * resolution * resolution;
 				outDensities[index] = density;
 			}
 		}
 	}
 	return outDensities;
+}
+
+std::vector<float> Planet::GenerateNoise(unsigned int resolution)
+{
+	int index = 0;
+	std::vector<float> noiseData(resolution * resolution * resolution);
+	for (int x = 0; x < resolution; x++)
+	{
+		for (int y = 0; y < resolution; y++)
+		{
+			for (int z = 0; z < resolution; z++)
+			{
+				noiseData[index++] = m_Noise.GetNoise((float)x, (float)y, (float)z);
+			}
+		}
+	}
+	return noiseData;
 }
 
 uint8_t Planet::GetTableIndex(glm::ivec3 CubePos, float isoLevel)

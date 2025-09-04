@@ -55,8 +55,19 @@ int main()
     glfwSetWindowUserPointer(nativeWindow, &camera);
 
     Planet planet;
-    planet.LoadMesh(5, 64);
+    planet.LoadMesh(3, 128);
     planet.SetLocation(glm::vec3(6, 0, 0));
+
+    Skybox skybox;
+    std::vector<std::string> faces {
+        "res/SkyTexture/px.png",
+        "res/SkyTexture/nx.png",
+        "res/SkyTexture/py.png",
+        "res/SkyTexture/ny.png",
+        "res/SkyTexture/pz.png",
+        "res/SkyTexture/nz.png"
+    };
+    skybox.load(faces);
 
     // --- MAIN LOOP ---
     while (!window.shouldClose())
@@ -94,14 +105,18 @@ int main()
         // Physics start
         accumulator += deltaTime;   
 
-        glm::mat4 projection = glm::perspective(glm::radians(45.0f), sceneViewportSize.x / sceneViewportSize.y, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(45.0f), sceneViewportSize.x / sceneViewportSize.y, 0.1f, 10000.0f);
         glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 model = glm::mat4(1.0f);
 
-        planet.DrawPlanet(view, projection, lightPos, camera.Position);
+
+        skybox.draw(view, projection);
 
         // Object Shader / DrawCalls
         lightingShader.use();
+
+        planet.DrawPlanet(view, projection, lightPos, camera.Position);
+
         lightingShader.setUniformValue("lightPos", lightPos);
         lightingShader.setUniformValue("viewPos", camera.Position);
         lightingShader.setUniformValue("lightColor", 1.0f, 1.0f, 1.0f);
@@ -124,8 +139,6 @@ int main()
             accumulator -= fixedDeltaTime;
         }
             //spherePS.Draw(particleShader);
-
-
 
         // Draw the light source sphere
         lightSourceShader.use();
