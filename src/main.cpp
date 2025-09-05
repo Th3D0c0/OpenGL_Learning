@@ -44,7 +44,7 @@ int main()
     glm::vec2 sceneViewportSize = {1800, 1200};
 
     Sphere lightSphere(0.1f, 36, 18);
-    glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
+    glm::vec3 lightPos(15.0f, 0.0f, 0.0f);
 
     Sphere BoundarySphere(8.0f, 36, 18);
     glm::vec3 BoundarySpherePos(0.0f, 0.0f, 0.0f);
@@ -55,8 +55,7 @@ int main()
     glfwSetWindowUserPointer(nativeWindow, &camera);
 
     Planet planet;
-    planet.LoadMesh(3, 128);
-    planet.SetLocation(glm::vec3(6, 0, 0));
+    planet.LoadMesh(10, 128);
 
     Skybox skybox;
     std::vector<std::string> faces {
@@ -105,50 +104,33 @@ int main()
         // Physics start
         accumulator += deltaTime;   
 
+        // Matrices
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), sceneViewportSize.x / sceneViewportSize.y, 0.1f, 10000.0f);
         glm::mat4 view = camera.GetViewMatrix();
-        glm::mat4 model = glm::mat4(1.0f);
 
+        // ---------Start Drawing Objects---------
 
         skybox.draw(view, projection);
 
-        // Object Shader / DrawCalls
-        lightingShader.use();
-
         planet.DrawPlanet(view, projection, lightPos, camera.Position);
 
-        lightingShader.setUniformValue("lightPos", lightPos);
-        lightingShader.setUniformValue("viewPos", camera.Position);
-        lightingShader.setUniformValue("lightColor", 1.0f, 1.0f, 1.0f);
-        lightingShader.setUniformValue("projection", projection);
-        lightingShader.setUniformValue("view", view);
-        lightingShader.setUniformValue("model", model);
-        BoundarySphere.Draw(lightingShader, true, false);
+		
+        //BoundarySphere.Draw(lightingShader, true, false);
 
-        // Particles Shader / DrawCalls
-        particleShader.use();
-        particleShader.setUniformValue("lightPos", lightPos);
-        particleShader.setUniformValue("viewPos", camera.Position);
-        particleShader.setUniformValue("lightColor", 1.0f, 1.0f, 1.0f);
-        particleShader.setUniformValue("projection", projection);
-        particleShader.setUniformValue("view", view);
-        particleShader.setUniformValue("model", model);
-        while (accumulator >= fixedDeltaTime)
-        {
-            //spherePS.Update(fixedDeltaTime);
-            accumulator -= fixedDeltaTime;
-        }
-            //spherePS.Draw(particleShader);
+        //// Particles
+        //while (accumulator >= fixedDeltaTime)
+        //{
+        //    spherePS.Update(fixedDeltaTime);
+        //    accumulator -= fixedDeltaTime;
+        //}
+        //    spherePS.Draw(particleShader, view, projection, lightPos, camera);
 
         // Draw the light source sphere
-        lightSourceShader.use();
-        lightSourceShader.setUniformValue("projection", projection);
-        lightSourceShader.setUniformValue("view", view);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, lightPos);
-        model = glm::scale(model, glm::vec3(0.2f));
-        lightSourceShader.setUniformValue("model", model);
-        lightSphere.Draw(lightSourceShader);
+        lightSphere.SetScale(glm::vec3(0.2));
+        lightSphere.SetLocation(glm::vec3(lightPos));
+        lightSphere.Draw(lightSourceShader, false, false, view, projection, lightPos, camera);
+
+        //------------End Drawing Objects------------
 
         sceneFramebuffer.unbind();
 

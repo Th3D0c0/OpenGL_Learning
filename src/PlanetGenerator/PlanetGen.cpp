@@ -1,8 +1,9 @@
-#include "PlanetGenerator/PlanetGen.h"
+﻿#include "PlanetGenerator/PlanetGen.h"
 #include"PlanetGenerator/Tables.h"
 #include "glm/glm.hpp"
 #include <GL/glew.h>
-#include <map>
+#include <unordered_map>
+#include <algorithm>
 
 Planet::Planet()
 {
@@ -48,7 +49,8 @@ void Planet::LoadMesh(float radius, unsigned int resolution)
 	m_Vertices.clear();
 	m_Indices.clear();
 
-	std::map <int, unsigned int> vertexMap;
+	std::unordered_map<uint64_t, unsigned int> vertexMap;
+	int nrOfVert = 0;
 
 	for (int x = 0; x < m_CurrentResolution - 1; x++)
 	{
@@ -65,7 +67,7 @@ void Planet::LoadMesh(float radius, unsigned int resolution)
 					cornerDensities[i] = GetDensity(cornerPos.x, cornerPos.y, cornerPos.z);
 				}
 
-				uint8_t cubeIndex = CalculateCubeIndex(cornerDensities, 0.0f);
+				uint8_t cubeIndex = CalculateCubeIndex(cornerDensities, -0.05f);
 
 				if (cubeIndex == 0 || cubeIndex == 255) continue;
 
@@ -88,21 +90,27 @@ void Planet::LoadMesh(float radius, unsigned int resolution)
 
 						if (vertexMap.find(edgeID) == vertexMap.end())
 						{
-							glm::vec3 vertPos = InterpolateVertex(
+							glm::vec3 pGrid = InterpolateVertex(
 								cornerPositions[cornerAIndex],
 								cornerPositions[cornerBIndex],
 								cornerDensities[cornerAIndex],
 								cornerDensities[cornerBIndex],
-								0.0f);
+								-0.05f);
 
-							glm::vec3 centerOffset(m_CurrentResolution / 2.0f);
-							vertPos -= centerOffset;
+							// 2) Convert GRID → NORMALIZED [-1,1] → WORLD (size = radius)
+							glm::vec3 pNorm = (pGrid / (float)(m_CurrentResolution - 1) - 0.5f) * 2.0f;
 
-							glm::vec3 vertNorm = CalculateNormal(vertPos + centerOffset);
+							glm::vec3 pWorld = pNorm * radius;
+
+							// 3) Compute normal from the density grid (still in grid space)
+							glm::vec3 n = CalculateNormal(pGrid);
+
+							// 4) Store
 							Vertex v;
-							v.Position = vertPos;
-							v.Normal = vertNorm;
+							v.Position = pWorld;
+							v.Normal = n;
 							m_Vertices.push_back(v);
+							nrOfVert++;
 
 							unsigned int newIndex = m_Vertices.size() - 1;
 							vertexMap[edgeID] = newIndex;
@@ -113,13 +121,19 @@ void Planet::LoadMesh(float radius, unsigned int resolution)
 							triIndices[j] = vertexMap[edgeID];
 						}
 					}
-					m_Indices.push_back(triIndices[0]);
-					m_Indices.push_back(triIndices[1]);
-					m_Indices.push_back(triIndices[2]);
+					if (triIndices[0] != triIndices[1] &&
+						triIndices[1] != triIndices[2] &&
+						triIndices[2] != triIndices[0])
+					{
+						m_Indices.push_back(triIndices[0]);
+						m_Indices.push_back(triIndices[1]);
+						m_Indices.push_back(triIndices[2]);
+					}
 				}
 			}
 		}
 	}
+	printf("Verteces: %d", nrOfVert);
 	UpdateMeshBuffers();
 }
 
@@ -128,7 +142,7 @@ void Planet::DrawPlanet(glm::mat4 viewMat4, glm::mat4 projMat4, const glm::vec3&
 	m_Shader->use();
 	m_Shader->setUniformValue("projection", projMat4);
 	m_Shader->setUniformValue("view", viewMat4);
-	m_Shader->setUniformValue("model", transform.GetModelMatrix());
+	m_Shader->setUniformValue("model", m_Transform.GetModelMatrix());
 
 	m_Shader->setUniformValue("lightPos", lightPos);
 	m_Shader->setUniformValue("viewPos", viewPos);
@@ -140,22 +154,6 @@ void Planet::DrawPlanet(glm::mat4 viewMat4, glm::mat4 projMat4, const glm::vec3&
 	glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 }
-
-void Planet::SetLocation(const glm::vec3& location)
-{
-	transform.SetLocation(location);
-}
-
-void Planet::SetRotation(const glm::vec3& rotation)
-{
-	transform.SetRotation(rotation);
-}
-
-void Planet::SetScale(const glm::vec3& scale)
-{
-	transform.SetScale(scale);
-}
-
 
 void Planet::UpdateMeshBuffers()
 {
@@ -170,47 +168,43 @@ void Planet::UpdateMeshBuffers()
 
 std::vector<float> Planet::CreateSphereDensityMap(float radius, unsigned int resolution)
 {
-	Planet::m_CurrentResolution = resolution;
+	Planet::m_CurrentResolution = resolution + 1;
 
-	glm::vec3 center(resolution/2.0f, resolution / 2.0f, resolution / 2.0f);
-	std::vector<float> outDensities(resolution * resolution * resolution);
+	std::vector<float> outDensities((resolution + 1) * (resolution + 1) * (resolution + 1));
 
-	float noiseStrength = radius * 0.2f;
-	float scale = 0.05f;
+	float voxelSize = (2.0f * radius) / resolution;
+
+
+	float noiseStrength = radius * 0.1f;
+	float noiseScale = 0.5f;
+
 	for (int x = 0; x < resolution; x++)
 	{
 		for (int y = 0; y < resolution; y++)
 		{
 			for (int z = 0; z < resolution; z++)
 			{
-				float distToCenter = glm::distance(glm::vec3(x, y, z), center);
+				float currX = (x / (float)resolution - 0.5f) * 2.0f * radius;
+				float currY = (y / (float)resolution - 0.5f) * 2.0f * radius;
+				float currZ = (z / (float)resolution - 0.5f) * 2.0f * radius;
+
+				glm::vec3 worldPos(currX, currY, currZ);
+
+				float distToCenter = glm::length(worldPos);
 				float density = distToCenter - radius;
 
-				density += m_Noise.GetNoise((float)x * scale,(float)y * scale,(float) z * scale) * noiseStrength;
+				density += m_Noise.GetNoise(
+					worldPos.x * noiseScale,
+					worldPos.y * noiseScale,
+					worldPos.z * noiseScale) * noiseStrength;
 
-				int index = x + y * resolution + z * resolution * resolution;
+				int gridRes = resolution + 1;
+				int index = x + y * gridRes + z * gridRes * gridRes;
 				outDensities[index] = density;
 			}
 		}
 	}
 	return outDensities;
-}
-
-std::vector<float> Planet::GenerateNoise(unsigned int resolution)
-{
-	int index = 0;
-	std::vector<float> noiseData(resolution * resolution * resolution);
-	for (int x = 0; x < resolution; x++)
-	{
-		for (int y = 0; y < resolution; y++)
-		{
-			for (int z = 0; z < resolution; z++)
-			{
-				noiseData[index++] = m_Noise.GetNoise((float)x, (float)y, (float)z);
-			}
-		}
-	}
-	return noiseData;
 }
 
 uint8_t Planet::GetTableIndex(glm::ivec3 CubePos, float isoLevel)
@@ -272,21 +266,81 @@ glm::vec3 Planet::InterpolateVertex(glm::vec3 p1, glm::vec3 p2, float d1, float 
 	if (std::abs(d1 - d2) < 0.00001) return p1;
 
 	float t = (isolevel - d1) / (d2 - d1);
+	t = glm::clamp(t, 0.001f, 0.999f);
 	return p1 + t * (p2 - p1);
 }
 
-glm::vec3 Planet::CalculateNormal(const glm::vec3& pos)
+// trilinear sample of the density field at fractional grid coords
+float Planet::GetDensityTrilinear(float x, float y, float z)
 {
-	// Round the precise float position to the nearest integer grid coordinate
-	int x = static_cast<int>(round(pos.x));
-	int y = static_cast<int>(round(pos.y));
-	int z = static_cast<int>(round(pos.z));
+	if (m_DensityValues.empty() || m_CurrentResolution == 0) return 0.0f;
 
-	// Use central differences on the integer grid to approximate the gradient
-	float nx = GetDensity(x + 1, y, z) - GetDensity(x - 1, y, z);
-	float ny = GetDensity(x, y + 1, z) - GetDensity(x, y - 1, z);
-	float nz = GetDensity(x, y, z + 1) - GetDensity(x, y, z - 1);
+	const float maxIdx = (float)m_CurrentResolution - 1.0f;
+	x = glm::clamp(x, 0.0f, maxIdx);
+	y = glm::clamp(y, 0.0f, maxIdx);
+	z = glm::clamp(z, 0.0f, maxIdx);
 
-	// Normalize the resulting vector
-	return glm::normalize(glm::vec3(nx, ny, nz));
+	int x0 = (int)floor(x);
+	int y0 = (int)floor(y);
+	int z0 = (int)floor(z);
+	int x1 = std::min(x0 + 1, m_CurrentResolution - 1);
+	int y1 = std::min(y0 + 1, m_CurrentResolution - 1);
+	int z1 = std::min(z0 + 1, m_CurrentResolution - 1);
+
+	float xd = x - x0;
+	float yd = y - y0;
+	float zd = z - z0;
+
+	auto D = [&](int xi, int yi, int zi)->float {
+		unsigned int idx = xi + yi * m_CurrentResolution + zi * m_CurrentResolution * m_CurrentResolution;
+		return m_DensityValues[idx];
+		};
+
+	float c000 = D(x0, y0, z0);
+	float c100 = D(x1, y0, z0);
+	float c010 = D(x0, y1, z0);
+	float c110 = D(x1, y1, z0);
+	float c001 = D(x0, y0, z1);
+	float c101 = D(x1, y0, z1);
+	float c011 = D(x0, y1, z1);
+	float c111 = D(x1, y1, z1);
+
+	float c00 = c000 * (1.0f - xd) + c100 * xd;
+	float c01 = c001 * (1.0f - xd) + c101 * xd;
+	float c10 = c010 * (1.0f - xd) + c110 * xd;
+	float c11 = c011 * (1.0f - xd) + c111 * xd;
+
+	float c0 = c00 * (1.0f - yd) + c10 * yd;
+	float c1 = c01 * (1.0f - yd) + c11 * yd;
+
+	return c0 * (1.0f - zd) + c1 * zd;
+}
+
+glm::vec3 Planet::CalculateNormal(const glm::vec3& posGrid)
+{
+	// central difference in grid-space using trilinear sampling
+	const float eps = 1.0f; // one grid unit; you can reduce to 0.5 for softer normals
+	float nx = GetDensityTrilinear(posGrid.x + eps, posGrid.y, posGrid.z) - GetDensityTrilinear(posGrid.x - eps, posGrid.y, posGrid.z);
+	float ny = GetDensityTrilinear(posGrid.x, posGrid.y + eps, posGrid.z) - GetDensityTrilinear(posGrid.x, posGrid.y - eps, posGrid.z);
+	float nz = GetDensityTrilinear(posGrid.x, posGrid.y, posGrid.z + eps) - GetDensityTrilinear(posGrid.x, posGrid.y, posGrid.z - eps);
+
+	glm::vec3 n(nx, ny, nz);
+	float len = glm::length(n);
+	if (len == 0.0f) return glm::vec3(0.0f, 1.0f, 0.0f); // fallback normal
+	return glm::normalize(n);
+}
+
+void Planet::SetLocation(const glm::vec3& location)
+{
+	m_Transform.SetLocation(location);
+}
+
+void Planet::SetRotation(const glm::vec3& rotation)
+{
+	m_Transform.SetRotation(rotation);
+}
+
+void Planet::SetScale(const glm::vec3& scale)
+{
+	m_Transform.SetScale(scale);
 }

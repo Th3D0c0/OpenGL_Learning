@@ -160,8 +160,14 @@ void Camera::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
         }
         if (yoffset < 0.0)
         {
+            if (camera->scroll == 0.0f)
+            {
+                camera->scroll = 0.0f;
+            }
+            else
+            {
         	camera->scroll -= 0.5f;
+            }
         }
-        printf("%f", xoffset);
     }
 }

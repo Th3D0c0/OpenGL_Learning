@@ -23,7 +23,7 @@ public:
 	void SetScale(const glm::vec3& scale);
 
 private:
-	Transform transform;
+	Transform m_Transform;
 
 	std::vector<float> CreateSphereDensityMap(float radius, unsigned int resolution);
 	uint8_t GetTableIndex(glm::ivec3 CubePos, float isoLevel);
@@ -32,9 +32,10 @@ private:
 	glm::vec3 CalculateNormal(const glm::vec3& pos);
 	float GetDensity(unsigned int x, unsigned int y, unsigned int z);
 
+	float GetDensityTrilinear(float x, float y, float z);
+
 	void UpdateMeshBuffers();
 	void SetupMesh();
-	std::vector<float> GenerateNoise(unsigned int resolution);
 
 	std::vector<float> m_DensityValues;
 	int m_CurrentResolution;

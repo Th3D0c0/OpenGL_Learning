@@ -4,11 +4,9 @@
 #include <vector>
 #include "Mesh.h"
 #include "Shader.h"
-#include <iostream>
 #include <unordered_map>
-#include <cmath>
-#include <cstdint>
-
+#include "Camera.h"
+#include "Transform.h"
 
 struct Particle
 {
@@ -66,9 +64,13 @@ public:
 	~ParticleSystem();
 
 	void Update(double dt);
-	void Draw(Shader& shader);
+	void Draw(Shader& shader, glm::mat4& view, glm::mat4& projection, glm::vec3& lightPos, Camera& camera);
 	float GetCurrentPosition();
 	int GetParticleCount();
+
+	void SetLocation(const glm::vec3& location);
+	void SetRotation(const glm::vec3& rotation);
+	void SetScale(const glm::vec3& scale);
 
 	float timeInterval;
 
@@ -89,4 +91,6 @@ private:
 
 	std::unordered_map<int64_t, std::vector<Particle*>> m_SpacialHash;
 	float m_CellSize;
+
+	Transform m_Transform;
 };

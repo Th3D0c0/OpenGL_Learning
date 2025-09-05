@@ -49,9 +49,9 @@ Mesh::~Mesh()
     glDeleteBuffers(1, &m_EBO);
 }
 
-void Mesh::Draw(Shader& shader, bool isWireframe, bool useTexture)
+void Mesh::Draw(Shader& shader, bool isWireframe, bool useTexture, glm::mat4 view, glm::mat4 projection, glm::vec3 lightPos, Camera camera)
 {
-
+    shader.use();
     if (useTexture)
     {
         // Counters for texture types to build the uniform names
@@ -80,10 +80,18 @@ void Mesh::Draw(Shader& shader, bool isWireframe, bool useTexture)
         }
     }
 
+    shader.setUniformValue("lightPos", lightPos);
+	shader.setUniformValue("viewPos", camera.Position);
+	shader.setUniformValue("lightColor", 1.0f, 1.0f, 1.0f);
+	shader.setUniformValue("projection", projection);
+	shader.setUniformValue("view", view);
+	shader.setUniformValue("model", m_Transform.GetModelMatrix());
+
     if (isWireframe)
     {
         glBindVertexArray(m_VAO);
-        glDrawElements(GL_LINES, m_Indices.size(), GL_UNSIGNED_INT, 0);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
         glActiveTexture(GL_TEXTURE0);
@@ -100,7 +108,7 @@ void Mesh::Draw(Shader& shader, bool isWireframe, bool useTexture)
     }
 }
 
-void Mesh::Draw(Shader& shader, unsigned int instanceCount)
+void Mesh::Draw(Shader& shader, unsigned int instanceCount, glm::mat4 view, glm::mat4 projection, glm::vec3 lightPos, Camera camera)
 {
     // Counters for texture types to build the uniform names
     unsigned int diffuseNr = 1;
@@ -127,6 +135,12 @@ void Mesh::Draw(Shader& shader, unsigned int instanceCount)
         m_Textures[i].bind(i);
     }
 
+    shader.setUniformValue("lightPos", lightPos);
+    shader.setUniformValue("viewPos", camera.Position);
+    shader.setUniformValue("lightColor", 1.0f, 1.0f, 1.0f);
+    shader.setUniformValue("projection", projection);
+    shader.setUniformValue("view", view);
+    shader.setUniformValue("model", m_Transform.GetModelMatrix());
 
     glBindVertexArray(m_VAO);
     glDrawElementsInstanced(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0, instanceCount);
@@ -155,4 +169,24 @@ AABB Mesh::CreateAABB(std::vector<Vertex>& vertices)
         result.max.z = glm::max(result.max.z, vertices[i].Position.z);
     }
     return result;
+}
+
+void Mesh::SetLocation(const glm::vec3& location)
+{
+    m_Transform.SetLocation(location);
+}
+
+void Mesh::SetRotation(const glm::vec3& rotation)
+{
+    m_Transform.SetRotation(rotation);
+}
+
+void Mesh::SetScale(const glm::vec3& scale)
+{
+    m_Transform.SetScale(scale);
+}
+
+void Mesh::SetShader(std::string vert, std::string frag)
+{
+    m_Shader = std::make_unique<Shader>(vert.c_str(), frag.c_str());
 }

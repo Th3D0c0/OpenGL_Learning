@@ -229,7 +229,29 @@ int ParticleSystem::GetParticleCount()
 	return m_Particles.size();
 }
 
-void ParticleSystem::Draw(Shader& shader)
+void ParticleSystem::SetLocation(const glm::vec3& location)
 {
-	m_Mesh.Draw(shader, (unsigned)m_Particles.size());
+	m_Transform.SetLocation(location);
+}
+
+void ParticleSystem::SetRotation(const glm::vec3& rotation)
+{
+	m_Transform.SetRotation(rotation);
+}
+
+void ParticleSystem::SetScale(const glm::vec3& scale)
+{
+	m_Transform.SetScale(scale);
+}
+
+void ParticleSystem::Draw(Shader& shader, glm::mat4& view, glm::mat4& projection, glm::vec3& lightPos, Camera& camera)
+{
+	shader.use();
+	shader.setUniformValue("lightPos", lightPos);
+	shader.setUniformValue("viewPos", camera.Position);
+	shader.setUniformValue("lightColor", 1.0f, 1.0f, 1.0f);
+	shader.setUniformValue("projection", projection);
+	shader.setUniformValue("view", view);
+	shader.setUniformValue("model", m_Transform.GetModelMatrix());
+	m_Mesh.Draw(shader, false, false, view, projection, lightPos, camera);
 }

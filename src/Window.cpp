@@ -152,9 +152,9 @@ void Window::DrawImGUIControlsWindow(glm::vec3& lightPos)
     if (ImGui::Begin("Controls", nullptr, window_flags))
     {
         ImGui::Text("Light Position");
-        ImGui::SliderFloat("X", &lightPos.x, -2.0f, 2.0f);
-        ImGui::SliderFloat("Y", &lightPos.y, -2.0f, 2.0f);
-        ImGui::SliderFloat("Z", &lightPos.z, -2.0f, 2.0f);
+        ImGui::SliderFloat("X", &lightPos.x, -20.0f, 20.0f);
+        ImGui::SliderFloat("Y", &lightPos.y, -20.0f, 20.0f);
+        ImGui::SliderFloat("Z", &lightPos.z, -20.0f, 20.0f);
 
         // Debug info
         ImGui::Separator();
