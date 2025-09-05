@@ -55,7 +55,7 @@ int main()
     glfwSetWindowUserPointer(nativeWindow, &camera);
 
     Planet planet;
-    planet.LoadMesh(10, 128);
+    planet.LoadMesh(10, 256);
 
     Skybox skybox;
     std::vector<std::string> faces {
@@ -67,6 +67,15 @@ int main()
         "res/SkyTexture/nz.png"
     };
     skybox.load(faces);
+
+    float lastNoiseFreq1 = 0.0f;
+    float noiseFreq1 = 0.0f;
+
+    float lastNoiseFreq2 = 0.0f;
+    float noiseFreq2 = 0.0f;
+
+    float lastNoiseFreq3 = 0.0f;
+    float noiseFreq3 = 0.0f;
 
     // --- MAIN LOOP ---
     while (!window.shouldClose())
@@ -112,6 +121,7 @@ int main()
 
         skybox.draw(view, projection);
 
+        if (noiseFreq1 != lastNoiseFreq1 || noiseFreq2 != lastNoiseFreq2 || noiseFreq3 != lastNoiseFreq3) planet.SetNoiseFrequency(noiseFreq1, noiseFreq2, noiseFreq3);
         planet.DrawPlanet(view, projection, lightPos, camera.Position);
 
 		
@@ -127,7 +137,7 @@ int main()
 
         // Draw the light source sphere
         lightSphere.SetScale(glm::vec3(0.2));
-        lightSphere.SetLocation(glm::vec3(lightPos));
+        lightSphere.SetLocation(lightPos);
         lightSphere.Draw(lightSourceShader, false, false, view, projection, lightPos, camera);
 
         //------------End Drawing Objects------------
@@ -139,7 +149,10 @@ int main()
         ImGui::Value("Value: %d", spherePS.GetParticleCount());
         ImGui::End();
         window.DrawSceneView(sceneFramebuffer, camera, window.getNativeWindow());
-        window.DrawImGUIControlsWindow(lightPos);
+        lastNoiseFreq1 = noiseFreq1;
+        lastNoiseFreq2 = noiseFreq2;
+        lastNoiseFreq3 = noiseFreq3;
+        window.DrawImGUIControlsWindow(lightPos, noiseFreq1, noiseFreq2, noiseFreq3);
 
         window.ImGUIRender();
         window.swapBuffers();

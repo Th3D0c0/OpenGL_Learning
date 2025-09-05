@@ -22,6 +22,8 @@ public:
 	void SetRotation(const glm::vec3& rotation);
 	void SetScale(const glm::vec3& scale);
 
+	void SetNoiseFrequency(float frequency1, float frequency2, float frequency3);
+
 private:
 	Transform m_Transform;
 
@@ -49,5 +51,9 @@ private:
 
 	std::unique_ptr<Shader> m_Shader;
 
-	FastNoiseLite m_Noise;
+	FastNoiseLite m_Noise00;
+	FastNoiseLite m_Noise01;
+	FastNoiseLite m_Noise02;
+
+	float m_Radius;
 };;

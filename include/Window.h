@@ -34,7 +34,7 @@ public:
     Window& operator=(const Window&) = delete;
 
     // IMGUI WINDOWS
-    void DrawImGUIControlsWindow(glm::vec3& lightPos);
+    void DrawImGUIControlsWindow(glm::vec3& lightPos, float& frequency1, float& frequency2, float& frequency3);
     void DrawSceneView(Framebuffer& framebuffer, Camera& camera, GLFWwindow* nativeWindow);
 
 private:

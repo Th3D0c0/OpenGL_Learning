@@ -144,7 +144,7 @@ void Window::startImGUIFrame()
     ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 }
 
-void Window::DrawImGUIControlsWindow(glm::vec3& lightPos)
+void Window::DrawImGUIControlsWindow(glm::vec3& lightPos, float& frequency1, float& frequency2, float& frequency3)
 {
     // Controls window - explicitly allow docking and moving
     ImGuiWindowFlags window_flags = 0; // No restrictive flags
@@ -155,6 +155,21 @@ void Window::DrawImGUIControlsWindow(glm::vec3& lightPos)
         ImGui::SliderFloat("X", &lightPos.x, -20.0f, 20.0f);
         ImGui::SliderFloat("Y", &lightPos.y, -20.0f, 20.0f);
         ImGui::SliderFloat("Z", &lightPos.z, -20.0f, 20.0f);
+
+        ImGui::Separator();
+
+        ImGui::Text("Frenqency1");
+        ImGui::SliderFloat("Frequency1", &frequency1, 0.0f, 0.5f);
+
+        ImGui::Separator();
+
+        ImGui::Text("Frenqency2");
+        ImGui::SliderFloat("Frequency2", &frequency2, 0.0f, 0.5f);
+
+        ImGui::Separator();
+
+        ImGui::Text("Frenqency3");
+        ImGui::SliderFloat("Frequency3", &frequency3, 0.0f, 0.5f);
 
         // Debug info
         ImGui::Separator();

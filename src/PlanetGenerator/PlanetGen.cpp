@@ -8,7 +8,19 @@
 Planet::Planet()
 {
 	SetupMesh();
-	m_Noise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
+	m_Noise00.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
+	m_Noise00.SetFractalType(FastNoiseLite::FractalType_FBm);
+	m_Noise00.SetFrequency(0.08f);
+	m_Noise00.SetFractalOctaves(4);
+	m_Noise00.SetFractalLacunarity(2.0f);
+	m_Noise00.SetFractalGain(0.5);
+
+
+	m_Noise01.SetNoiseType(FastNoiseLite::NoiseType_Cellular);
+	m_Noise01.SetCellularDistanceFunction(FastNoiseLite::CellularDistanceFunction_EuclideanSq);
+	m_Noise01.SetCellularReturnType(FastNoiseLite::CellularReturnType_Distance2);
+	m_Noise01.SetFrequency(0.01f);
+	m_Noise00.SetFrequency(0.05);
 }
 
 Planet::~Planet()
@@ -133,7 +145,7 @@ void Planet::LoadMesh(float radius, unsigned int resolution)
 			}
 		}
 	}
-	printf("Verteces: %d", nrOfVert);
+	printf("Verteces: %d\n", nrOfVert);
 	UpdateMeshBuffers();
 }
 
@@ -168,15 +180,16 @@ void Planet::UpdateMeshBuffers()
 
 std::vector<float> Planet::CreateSphereDensityMap(float radius, unsigned int resolution)
 {
-	Planet::m_CurrentResolution = resolution + 1;
+	m_CurrentResolution = resolution + 1;
+	m_Radius = radius;
 
 	std::vector<float> outDensities((resolution + 1) * (resolution + 1) * (resolution + 1));
 
-	float voxelSize = (2.0f * radius) / resolution;
+	float gridPadding = 2.0f;
 
-
-	float noiseStrength = radius * 0.1f;
-	float noiseScale = 0.5f;
+	float noiseScale1 = 1.7f;
+	float noiseScale2 = 2.0f;
+	float noiseScale3 = 5.0f;
 
 	for (int x = 0; x < resolution; x++)
 	{
@@ -184,19 +197,27 @@ std::vector<float> Planet::CreateSphereDensityMap(float radius, unsigned int res
 		{
 			for (int z = 0; z < resolution; z++)
 			{
-				float currX = (x / (float)resolution - 0.5f) * 2.0f * radius;
-				float currY = (y / (float)resolution - 0.5f) * 2.0f * radius;
-				float currZ = (z / (float)resolution - 0.5f) * 2.0f * radius;
+				float currX = (x / (float)resolution - 0.5f) * 2.0f * radius * gridPadding;
+				float currY = (y / (float)resolution - 0.5f) * 2.0f * radius * gridPadding;
+				float currZ = (z / (float)resolution - 0.5f) * 2.0f * radius * gridPadding;
 
 				glm::vec3 worldPos(currX, currY, currZ);
 
 				float distToCenter = glm::length(worldPos);
 				float density = distToCenter - radius;
 
-				density += m_Noise.GetNoise(
-					worldPos.x * noiseScale,
-					worldPos.y * noiseScale,
-					worldPos.z * noiseScale) * noiseStrength;
+				density += m_Noise00.GetNoise(
+					(float)x,
+					(float)y,
+					(float)z) * noiseScale1;
+				density += m_Noise01.GetNoise(
+					(float)x,
+					(float)y,
+					(float)z) * noiseScale2;
+				//density += m_Noise02.GetNoise(
+				//	(float)x,
+				//	(float)y,
+				//	(float)z) * noiseScale3;
 
 				int gridRes = resolution + 1;
 				int index = x + y * gridRes + z * gridRes * gridRes;
@@ -343,4 +364,12 @@ void Planet::SetRotation(const glm::vec3& rotation)
 void Planet::SetScale(const glm::vec3& scale)
 {
 	m_Transform.SetScale(scale);
+}
+
+void Planet::SetNoiseFrequency(float frequency1, float frequency2, float frequency3)
+{
+	m_Noise00.SetFrequency(frequency1);
+	m_Noise01.SetFrequency(frequency2);
+	m_Noise02.SetFrequency(frequency3);
+	LoadMesh(m_Radius, m_CurrentResolution);
 }
