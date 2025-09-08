@@ -1,0 +1,143 @@
+#version 460 core
+
+// 1. DEFINE WORKGROUP SIZE
+layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+// 2. DEFINE UNIFORMS
+uniform mat4 viewMatrix;
+uniform mat4 projectionMatrix;
+uniform mat4 inverseProjectionMatrix;
+uniform sampler2D depthMap;
+uniform vec2 screenSize;
+
+// 3. DEFINE DATA STRUCTURES
+#define LIGHT_TYPE_DIRECTIONAL 0
+#define LIGHT_TYPE_POINT 1
+#define LIGHT_TYPE_SPOT 2
+
+struct Light {
+    vec4 positionVS;   // Position in View Space
+    vec4 color;
+    vec4 directionVS;  // Direction in View Space
+    float spotlightAngle;
+    float range;
+    float intensity;
+    int type;
+    int enabled;
+};
+
+// Input buffer of all lights in the scene
+layout(std140, binding = 0) readonly buffer AllLights {
+    Light lights[];
+};
+
+// This buffer will now hold two things:
+// 1. A global atomic counter for visible lights.
+// 2. The grid that maps tiles to their light lists.
+layout(std430, binding = 1) buffer LightGrid {
+    uint visibleLightCount;
+    // Other grid data will go here later...
+};
+
+// Output buffer for the visible light indices
+layout(std430, binding = 2) writeonly buffer VisibleLightIndices {
+    uint indices[];
+};
+
+// 4. DEFINE SHARED MEMORY
+shared float sharedMinDepth[256];
+shared float sharedMaxDepth[256];
+
+// 5. HELPER FUNCTIONS
+
+// Function to get a point on the view space frustum for a given screen coordinate and Z value
+vec3 unprojectPoint(float x, float y, float z, vec2 screenSize) {
+    vec4 ndcPos;
+    ndcPos.xy = vec2(x, y) / screenSize * 2.0 - 1.0;
+    ndcPos.z = z * 2.0 - 1.0; // Depth from [0,1] to NDC [-1,1]
+    ndcPos.w = 1.0;
+    
+    vec4 viewPos = inverseProjectionMatrix * ndcPos;
+    return viewPos.xyz / viewPos.w;
+}
+
+// Function to test a sphere against a plane
+// Returns distance to plane; positive is outside, negative is inside
+float distanceToPlane(vec4 plane, vec3 sphereCenter, float sphereRadius) {
+    return dot(plane.xyz, sphereCenter) + plane.w - sphereRadius;
+}
+
+
+// 6. MAIN FUNCTION
+void main()
+{
+    // --- PART A: FIND MIN/MAX DEPTH (Same as before) ---
+    uint localIndex = gl_LocalInvocationIndex;
+    ivec2 tileStart = ivec2(gl_WorkGroupID.xy) * 16;
+    ivec2 pixelCoord = tileStart + ivec2(gl_LocalInvocationID.xy);
+    float depth = texelFetch(depthMap, pixelCoord, 0).r;
+    
+    sharedMinDepth[localIndex] = depth;
+    sharedMaxDepth[localIndex] = depth;
+    barrier();
+
+    for (uint s = 128; s > 0; s >>= 1) {
+        if (localIndex < s) {
+            sharedMinDepth[localIndex] = min(sharedMinDepth[localIndex], sharedMinDepth[localIndex + s]);
+            sharedMaxDepth[localIndex] = max(sharedMaxDepth[localIndex], sharedMaxDepth[localIndex + s]);
+        }
+        barrier();
+    }
+
+    // --- PART B: CONSTRUCT FRUSTUM AND CULL LIGHTS ---
+    if (localIndex == 0) {
+        float minTileDepth = sharedMinDepth[0];
+        float maxTileDepth = sharedMaxDepth[0];
+
+        // Only proceed if there is geometry in the tile (depth is less than 1.0)
+        if (minTileDepth < 1.0) {
+            // Unproject the 4 corners of the tile at the NEAR plane of the tile
+            vec3 c0 = unprojectPoint(tileStart.x, tileStart.y, minTileDepth, screenSize);
+            vec3 c1 = unprojectPoint(tileStart.x + 16, tileStart.y, minTileDepth, screenSize);
+            vec3 c2 = unprojectPoint(tileStart.x + 16, tileStart.y + 16, minTileDepth, screenSize);
+            vec3 c3 = unprojectPoint(tileStart.x, tileStart.y + 16, minTileDepth, screenSize);
+
+            // The camera is at (0,0,0) in View Space
+            vec3 eyePos = vec3(0);
+
+            // Create the 4 planes of the frustum
+            // The cross product gives the normal, which points inwards
+            vec4 frustumPlanes[4];
+            frustumPlanes[0] = vec4(normalize(cross(c0, c1)), 0); // Right
+            frustumPlanes[1] = vec4(normalize(cross(c1, c2)), 0); // Top
+            frustumPlanes[2] = vec4(normalize(cross(c2, c3)), 0); // Left
+            frustumPlanes[3] = vec4(normalize(cross(c3, c0)), 0); // Bottom
+
+            // --- PART C: LOOP THROUGH LIGHTS AND STORE VISIBLE ONES ---
+            for (uint i = 0; i < lights.length(); ++i) {
+                if (lights[i].enabled == 0) {
+                    continue;
+                }
+
+                bool isVisible = true;
+                if (lights[i].type == LIGHT_TYPE_POINT) {
+                    // Test point light (sphere) against the 4 frustum planes
+                    for (int j = 0; j < 4; ++j) {
+                        if (distanceToPlane(frustumPlanes[j], lights[i].positionVS.xyz, lights[i].range) > 0) {
+                            isVisible = false;
+                            break;
+                        }
+                    }
+                }
+                // (Spot light and directional light logic would go here)
+                
+                if (isVisible) {
+                    // Atomically increment the global counter to get a unique index
+                    uint storageIndex = atomicAdd(visibleLightCount, 1);
+                    // Store the light's index in the output buffer at our unique spot
+                    indices[storageIndex] = i;
+                }
+            }
+        }
+    }
+}

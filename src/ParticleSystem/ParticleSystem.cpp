@@ -244,14 +244,11 @@ void ParticleSystem::SetScale(const glm::vec3& scale)
 	m_Transform.SetScale(scale);
 }
 
-void ParticleSystem::Draw(Shader& shader, glm::mat4& view, glm::mat4& projection, glm::vec3& lightPos, Camera& camera)
+void ParticleSystem::Draw(DrawProperties& globalProperties)
 {
-	shader.use();
-	shader.setUniformValue("lightPos", lightPos);
-	shader.setUniformValue("viewPos", camera.Position);
-	shader.setUniformValue("lightColor", 1.0f, 1.0f, 1.0f);
-	shader.setUniformValue("projection", projection);
-	shader.setUniformValue("view", view);
-	shader.setUniformValue("model", m_Transform.GetModelMatrix());
-	m_Mesh.Draw(shader, false, false, view, projection, lightPos, camera);
+	globalProperties.shader->use();
+	globalProperties.shader->setUniformValue("viewPos", globalProperties.viewPosition);
+	globalProperties.shader->setUniformValue("lightColor", 1.0f, 1.0f, 1.0f);
+	globalProperties.shader->setUniformValue("model", m_Transform.GetModelMatrix());
+	m_Mesh.Draw(globalProperties);
 }

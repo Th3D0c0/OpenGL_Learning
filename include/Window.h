@@ -8,7 +8,15 @@
 #include "backends/imgui_impl_opengl3.h"
 
 #include "Framebuffer.h"
-#include "Camera.h"
+#include "Scene/Camera.h"
+#include "Scene/Scene.h"
+
+// Context struct for framebuffer resize callback
+struct AppContext
+{
+    Camera* camera;
+    Scene* scene;
+};
 
 class Window
 {
@@ -34,7 +42,7 @@ public:
     Window& operator=(const Window&) = delete;
 
     // IMGUI WINDOWS
-    void DrawImGUIControlsWindow(glm::vec3& lightPos, float& frequency1, float& frequency2, float& frequency3);
+    void DrawImGUIControlsWindow(glm::vec3& lightPos);
     void DrawSceneView(Framebuffer& framebuffer, Camera& camera, GLFWwindow* nativeWindow);
 
 private:

@@ -74,3 +74,13 @@ void Framebuffer::resize(unsigned int width, unsigned int height)
     m_Height = height;
     invalidate();
 }
+
+float Framebuffer::GetFramebufferWidth()
+{
+    return static_cast<float>(m_Width);
+}
+
+float Framebuffer::GetFramebufferHeight()
+{
+    return static_cast<float>(m_Height);
+}

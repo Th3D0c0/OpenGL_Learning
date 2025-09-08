@@ -3,12 +3,11 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include <string>
-#include "MeshData.h"
+#include "Scene/Mesh/MeshData.h"
 #include "Texture.h"
 #include "Shader.h"
-#include "Transform.h"
-#include "Camera.h"
-#include "Shader.h"
+#include "Scene/Transform.h"
+#include "Scene/Camera.h"
 
 class Mesh
 {
@@ -19,8 +18,8 @@ public:
     ~Mesh();
 
     // Renders the mesh
-    void Draw(Shader& shader, bool isWireframe, bool useTexture, glm::mat4 view, glm::mat4 projection, glm::vec3 lightPos, Camera camera);
-    void Draw(Shader& shader, unsigned int instanceCount, glm::mat4 view, glm::mat4 projection, glm::vec3 lightPos, Camera camera);
+    void Draw(DrawProperties& globalProperties);
+    void DrawMeshDepthPrepass(DrawProperties& properties);
     
     AABB CreateAABB(std::vector<Vertex>& vertices);
 
@@ -30,6 +29,8 @@ public:
     void SetLocation(const glm::vec3& location);
     void SetRotation(const glm::vec3& rotation);
     void SetScale(const glm::vec3& scale);
+
+    glm::mat4 GetModelMatrix();
 
     void SetShader(std::string vert, std::string frag);
 
@@ -46,4 +47,6 @@ protected:
 
     Transform m_Transform;
     std::shared_ptr<Shader> m_Shader;
+
+    DrawProperties m_MeshProperties;
 };

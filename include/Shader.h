@@ -12,6 +12,7 @@ public:
 
     // Constructor reads and builds the shader
     Shader(const char* vertexPath, const char* fragmentPath);
+    Shader(const char* computePath);
     // Destructor to clean up the shader program
     ~Shader();
 

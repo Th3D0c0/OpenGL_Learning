@@ -1,10 +1,18 @@
-    #include "Window.h"
+#include "Window.h"
+#include "Scene/Scene.h"
 #include <iostream>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     // Update OpenGL's viewport to match the new window size
     glViewport(0, 0, width, height);
+
+    AppContext* context = static_cast<AppContext*>(glfwGetWindowUserPointer(window));
+    if (context)
+    {
+        // Tell your scene to handle the resize logic
+        context->scene->OnWindowResize(width, height);
+    }
 }
 void glfw_error_callback(int error, const char* description)
 {
@@ -144,7 +152,7 @@ void Window::startImGUIFrame()
     ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 }
 
-void Window::DrawImGUIControlsWindow(glm::vec3& lightPos, float& frequency1, float& frequency2, float& frequency3)
+void Window::DrawImGUIControlsWindow(glm::vec3& lightPos)
 {
     // Controls window - explicitly allow docking and moving
     ImGuiWindowFlags window_flags = 0; // No restrictive flags
@@ -155,21 +163,6 @@ void Window::DrawImGUIControlsWindow(glm::vec3& lightPos, float& frequency1, flo
         ImGui::SliderFloat("X", &lightPos.x, -20.0f, 20.0f);
         ImGui::SliderFloat("Y", &lightPos.y, -20.0f, 20.0f);
         ImGui::SliderFloat("Z", &lightPos.z, -20.0f, 20.0f);
-
-        ImGui::Separator();
-
-        ImGui::Text("Frenqency1");
-        ImGui::SliderFloat("Frequency1", &frequency1, 0.0f, 0.5f);
-
-        ImGui::Separator();
-
-        ImGui::Text("Frenqency2");
-        ImGui::SliderFloat("Frequency2", &frequency2, 0.0f, 0.5f);
-
-        ImGui::Separator();
-
-        ImGui::Text("Frenqency3");
-        ImGui::SliderFloat("Frequency3", &frequency3, 0.0f, 0.5f);
 
         // Debug info
         ImGui::Separator();

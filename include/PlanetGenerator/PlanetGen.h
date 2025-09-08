@@ -3,10 +3,11 @@
 #include <vector>
 #include <memory>
 #include "glm/vec3.hpp"
-#include "MeshData.h"
+#include "Scene/Mesh/MeshData.h"
 #include "Shader.h"
-#include "Transform.h"
+#include "Scene/Transform.h"
 #include "FastNoiseLite.h"
+#include "Scene/Mesh/MeshData.h"
 
 class Planet
 {
@@ -16,7 +17,8 @@ public:
 
 	// initial Planet loading
 	void LoadMesh(float radius, unsigned int resolution);
-	void DrawPlanet(glm::mat4 viewMat4, glm::mat4 projMat4, const glm::vec3& lightPos, const glm::vec3& viewPos);
+	void Draw(DrawProperties& properties);
+	void DrawPlanetDepthPrepass(DrawProperties& properties);
 
 	void SetLocation(const glm::vec3& location);
 	void SetRotation(const glm::vec3& rotation);
@@ -48,8 +50,6 @@ private:
 	unsigned int m_VAO;
 	unsigned int m_VBO;
 	unsigned int m_EBO;
-
-	std::unique_ptr<Shader> m_Shader;
 
 	FastNoiseLite m_Noise00;
 	FastNoiseLite m_Noise01;

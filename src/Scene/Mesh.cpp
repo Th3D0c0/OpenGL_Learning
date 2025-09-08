@@ -1,4 +1,4 @@
-#include "Mesh.h"
+#include "Scene/Mesh/Mesh.h"
 #include <vector>
 #include <iostream>
 #include <GL/glew.h>
@@ -49,66 +49,7 @@ Mesh::~Mesh()
     glDeleteBuffers(1, &m_EBO);
 }
 
-void Mesh::Draw(Shader& shader, bool isWireframe, bool useTexture, glm::mat4 view, glm::mat4 projection, glm::vec3 lightPos, Camera camera)
-{
-    shader.use();
-    if (useTexture)
-    {
-        // Counters for texture types to build the uniform names
-        unsigned int diffuseNr = 1;
-        unsigned int specularNr = 1;
-
-        for (unsigned int i = 0; i < m_Textures.size(); i++)
-        {
-            std::string number;
-            std::string type = m_Textures[i].getType();
-
-            if (type == "texture_diffuse")
-            {
-                number = std::to_string(diffuseNr++);
-            }
-            else if (type == "texture_specular")
-            {
-                number = std::to_string(specularNr++);
-            }
-
-            // Set the sampler uniform in the shader (e.g., "texture_diffuse1")
-            shader.setUniformValue((type + number), (int)i);
-
-            // Bind the texture to the correct texture unit
-            m_Textures[i].bind(i);
-        }
-    }
-
-    shader.setUniformValue("lightPos", lightPos);
-	shader.setUniformValue("viewPos", camera.Position);
-	shader.setUniformValue("lightColor", 1.0f, 1.0f, 1.0f);
-	shader.setUniformValue("projection", projection);
-	shader.setUniformValue("view", view);
-	shader.setUniformValue("model", m_Transform.GetModelMatrix());
-
-    if (isWireframe)
-    {
-        glBindVertexArray(m_VAO);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
-
-        glActiveTexture(GL_TEXTURE0);
-    }
-    else
-    {
-        // Draw the mesh
-        glBindVertexArray(m_VAO);
-        glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
-
-        // Always good practice to set everything back to defaults once configured.
-        glActiveTexture(GL_TEXTURE0);
-    }
-}
-
-void Mesh::Draw(Shader& shader, unsigned int instanceCount, glm::mat4 view, glm::mat4 projection, glm::vec3 lightPos, Camera camera)
+void Mesh::Draw(DrawProperties& globalProperties)
 {
     // Counters for texture types to build the uniform names
     unsigned int diffuseNr = 1;
@@ -129,25 +70,66 @@ void Mesh::Draw(Shader& shader, unsigned int instanceCount, glm::mat4 view, glm:
         }
 
         // Set the sampler uniform in the shader (e.g., "texture_diffuse1")
-        shader.setUniformValue((type + number), (int)i);
+        globalProperties.shader->setUniformValue((type + number), (int)i);
 
         // Bind the texture to the correct texture unit
         m_Textures[i].bind(i);
     }
 
-    shader.setUniformValue("lightPos", lightPos);
-    shader.setUniformValue("viewPos", camera.Position);
-    shader.setUniformValue("lightColor", 1.0f, 1.0f, 1.0f);
-    shader.setUniformValue("projection", projection);
-    shader.setUniformValue("view", view);
-    shader.setUniformValue("model", m_Transform.GetModelMatrix());
+    globalProperties.shader->setUniformValue("viewPos", globalProperties.viewPosition);
+    globalProperties.shader->setUniformValue("model", m_Transform.GetModelMatrix());
 
-    glBindVertexArray(m_VAO);
-    glDrawElementsInstanced(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0, instanceCount);
-    glBindVertexArray(0);
+    if (globalProperties.instanceCount > 0)
+    {
+        if (globalProperties.isWireframe)
+        {
+            glBindVertexArray(m_VAO);
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            glDrawElementsInstanced(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0, globalProperties.instanceCount);
+            glBindVertexArray(0);
 
+            glActiveTexture(GL_TEXTURE0);
+        }
+        else
+        {
+	    glBindVertexArray(m_VAO);
+	    glDrawElementsInstanced(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0, globalProperties.instanceCount);
+	    glBindVertexArray(0);
+
+	    glActiveTexture(GL_TEXTURE0);
+        }
+    }
+    else
+    {
+        if (globalProperties.isWireframe)
+        {
+            glBindVertexArray(m_VAO);
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
+
+            glActiveTexture(GL_TEXTURE0);
+        }
+        else
+        {
+            // Draw the mesh
+            glBindVertexArray(m_VAO);
+            glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
+
+            // Always good practice to set everything back to defaults once configured.
+            glActiveTexture(GL_TEXTURE0);
+        }
+    }
     // Always good practice to set everything back to defaults once configured.
     glActiveTexture(GL_TEXTURE0);
+}
+
+void Mesh::DrawMeshDepthPrepass(DrawProperties& properties)
+{
+    glBindVertexArray(m_VAO);
+    glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
 }
 
 AABB Mesh::CreateAABB(std::vector<Vertex>& vertices)
@@ -184,6 +166,11 @@ void Mesh::SetRotation(const glm::vec3& rotation)
 void Mesh::SetScale(const glm::vec3& scale)
 {
     m_Transform.SetScale(scale);
+}
+
+glm::mat4 Mesh::GetModelMatrix()
+{
+    return m_Transform.GetModelMatrix();
 }
 
 void Mesh::SetShader(std::string vert, std::string frag)

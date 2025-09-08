@@ -27,6 +27,8 @@ void process_app_input(GLFWwindow* window)
         glfwSetWindowShouldClose(window, true);
 }
 
+
+
 int main()
 {
     // Use direct initialization
@@ -41,7 +43,17 @@ int main()
 
     // Framebuffer for Imgui
     Framebuffer sceneFramebuffer(1800, 1200);
-    glm::vec2 sceneViewportSize = {1800, 1200};
+
+    // Create Scene
+    Scene scene(sceneFramebuffer.GetFramebufferWidth(), sceneFramebuffer.GetFramebufferHeight());
+
+    // Fill the Context Struct for the framebuffer resize callback
+    AppContext context;
+    context.camera = &camera;
+    context.scene = &scene;
+    glfwSetWindowUserPointer(nativeWindow, &context);
+
+    DrawProperties depthPrepassDrawProperties;
 
     Sphere lightSphere(0.1f, 36, 18);
     glm::vec3 lightPos(15.0f, 0.0f, 0.0f);
@@ -52,10 +64,11 @@ int main()
     Sphere instancedSphere(1.0f, 16, 12);
     ParticleSystem spherePS(instancedSphere, 5000);
 
-    glfwSetWindowUserPointer(nativeWindow, &camera);
+    auto planet = std::make_unique<Planet>();
+    planet->LoadMesh(10, 128);
+    scene.AddObject(std::move(planet));
 
-    Planet planet;
-    planet.LoadMesh(10, 256);
+    auto light = std::make_unique<Light>();
 
     Skybox skybox;
     std::vector<std::string> faces {
@@ -67,15 +80,6 @@ int main()
         "res/SkyTexture/nz.png"
     };
     skybox.load(faces);
-
-    float lastNoiseFreq1 = 0.0f;
-    float noiseFreq1 = 0.0f;
-
-    float lastNoiseFreq2 = 0.0f;
-    float noiseFreq2 = 0.0f;
-
-    float lastNoiseFreq3 = 0.0f;
-    float noiseFreq3 = 0.0f;
 
     // --- MAIN LOOP ---
     while (!window.shouldClose())
@@ -103,6 +107,16 @@ int main()
         process_app_input(nativeWindow);
         camera.ProcessInput(nativeWindow, deltaTime);
 
+        // Matrices
+        glm::mat4 projection = glm::perspective(glm::radians(45.0f), sceneFramebuffer.GetFramebufferWidth() / sceneFramebuffer.GetFramebufferHeight(), 0.1f, 10000.0f);
+        glm::mat4 view = camera.GetViewMatrix();
+        depthPrepassDrawProperties.projection = projection;
+        depthPrepassDrawProperties.view = view;
+        depthPrepassDrawProperties.screenWidth = sceneFramebuffer.GetFramebufferWidth();
+        depthPrepassDrawProperties.screenHeight = sceneFramebuffer.GetFramebufferHeight();
+
+        // Calculate the needed Depth buffer and Light Culling Information BEFORE the sceneFramebuffer
+        scene.RenderPrepass(depthPrepassDrawProperties);
 
         // --- RENDER 3D SCENE TO FRAMEBUFFER ---
         sceneFramebuffer.bind();
@@ -110,23 +124,28 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
-        // Physics start
-        accumulator += deltaTime;   
-
-        // Matrices
-        glm::mat4 projection = glm::perspective(glm::radians(45.0f), sceneViewportSize.x / sceneViewportSize.y, 0.1f, 10000.0f);
-        glm::mat4 view = camera.GetViewMatrix();
 
         // ---------Start Drawing Objects---------
+        glm::vec3 lightWorldPosition = glm::vec3(15.0f, 5.0f, 20.0f); // Put light in the world
+        auto frameLight = std::make_unique<Light>();
+        frameLight->positionVS = view * glm::vec4(lightWorldPosition, 1.0f); // Transform to View Space
+        frameLight->color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        frameLight->intensity = 15.0f; // Increase intensity significantly
+        frameLight->range = 100.0f;
+        frameLight->type = 1; // Point light
+        frameLight->enabled = 1;
+        scene.AddLight(std::move(frameLight));
+        scene.UpdateLightBuffer();
+
+        scene.RenderScene(view, projection);
 
         skybox.draw(view, projection);
-
-        if (noiseFreq1 != lastNoiseFreq1 || noiseFreq2 != lastNoiseFreq2 || noiseFreq3 != lastNoiseFreq3) planet.SetNoiseFrequency(noiseFreq1, noiseFreq2, noiseFreq3);
-        planet.DrawPlanet(view, projection, lightPos, camera.Position);
 
 		
         //BoundarySphere.Draw(lightingShader, true, false);
 
+        // Physics start
+        accumulator += deltaTime;   
         //// Particles
         //while (accumulator >= fixedDeltaTime)
         //{
@@ -135,10 +154,6 @@ int main()
         //}
         //    spherePS.Draw(particleShader, view, projection, lightPos, camera);
 
-        // Draw the light source sphere
-        lightSphere.SetScale(glm::vec3(0.2));
-        lightSphere.SetLocation(lightPos);
-        lightSphere.Draw(lightSourceShader, false, false, view, projection, lightPos, camera);
 
         //------------End Drawing Objects------------
 
@@ -149,10 +164,7 @@ int main()
         ImGui::Value("Value: %d", spherePS.GetParticleCount());
         ImGui::End();
         window.DrawSceneView(sceneFramebuffer, camera, window.getNativeWindow());
-        lastNoiseFreq1 = noiseFreq1;
-        lastNoiseFreq2 = noiseFreq2;
-        lastNoiseFreq3 = noiseFreq3;
-        window.DrawImGUIControlsWindow(lightPos, noiseFreq1, noiseFreq2, noiseFreq3);
+        window.DrawImGUIControlsWindow(lightPos);
 
         window.ImGUIRender();
         window.swapBuffers();

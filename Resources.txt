@@ -1,0 +1,6 @@
+General OpenGL learning:
+https://learnopengl.com/Introduction
+
+For the Marching Cubes algorithm:
+https://developer.nvidia.com/gpugems/gpugems3/part-i-geometry/chapter-1-generating-complex-procedural-terrains-using-gpu
+https://www.youtube.com/watch?v=vTMEdHcKgM4

@@ -13,6 +13,8 @@ public:
     void resize(unsigned int width, unsigned int height);
 
     unsigned int getTextureColorBuffer() const { return m_ColorAttachment; }
+    float GetFramebufferWidth();
+    float GetFramebufferHeight();
 
 private:
     // Helper function to create/recreate the framebuffer

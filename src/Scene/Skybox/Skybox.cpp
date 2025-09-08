@@ -1,4 +1,4 @@
-#include "Skybox/Skybox.h"
+#include "Scene/Skybox/Skybox.h"
 #include "stb_image.h" // For loading images
 #include <iostream>
 

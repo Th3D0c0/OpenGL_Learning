@@ -2,11 +2,12 @@
 
 #include "glm/glm.hpp"
 #include <vector>
-#include "Mesh.h"
+#include "Scene/Mesh/Mesh.h"
 #include "Shader.h"
 #include <unordered_map>
-#include "Camera.h"
-#include "Transform.h"
+#include "Scene/Camera.h"
+#include "Scene/Transform.h"
+#include "Scene/Mesh/MeshData.h"
 
 struct Particle
 {
@@ -64,7 +65,7 @@ public:
 	~ParticleSystem();
 
 	void Update(double dt);
-	void Draw(Shader& shader, glm::mat4& view, glm::mat4& projection, glm::vec3& lightPos, Camera& camera);
+	void Draw(DrawProperties& globalProperties);
 	float GetCurrentPosition();
 	int GetParticleCount();
 

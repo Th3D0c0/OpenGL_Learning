@@ -1,13 +1,17 @@
 #include "Window.h"
 #include "Shader.h"
-#include "Mesh.h"
-#include "Camera.h"
-#include "Sphere.h"
+#include "Scene/Mesh/Mesh.h"
+#include "Scene/Object.h"
+#include "Scene/Camera.h"
+#include "Scene/Sphere.h"
 #include "Framebuffer.h"
 #include "ParticleSystem/ParticleSystem.h"
 #include "PlanetGenerator/PlanetGen.h"
-#include "Skybox/Skybox.h"
-#include "Transform.h"
+#include "Scene/Skybox/Skybox.h"
+#include "Scene/Transform.h"
+#include "Scene/Scene.h"
+#include "Scene/Mesh/MeshData.h"
+#include "Scene/Light.h"
 
 #include <iostream>
 #include <vector>

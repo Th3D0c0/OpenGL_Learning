@@ -46,8 +46,8 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
     vertex = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex, 1, &vShaderCode, NULL);
     glCompileShader(vertex);
-    checkCompileErrors(vertex, "VERTEX");
-
+    
+checkCompileErrors(vertex, "VERTEX");
     // Fragment Shader
     fragment = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment, 1, &fShaderCode, NULL);
@@ -64,6 +64,47 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
     // Delete the shaders as they're linked into our program now and no longer necessary
     glDeleteShader(vertex);
     glDeleteShader(fragment);
+}
+
+Shader::Shader(const char* computePath)
+{
+    std::string computeCode;
+    std::ifstream cShaderFile;
+
+    cShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+
+    try
+    {
+        // Open files
+        cShaderFile.open(computePath);
+        std::stringstream cShaderStream;
+        // Read file's buffer contents into streams
+        cShaderStream << cShaderFile.rdbuf();
+        // Close file handlers
+        cShaderFile.close();
+        // Convert stream into string
+        computeCode = cShaderStream.str();
+    }
+    catch (std::ifstream::failure& e)
+    {
+        std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
+    }
+
+    const char* cShaderCode = computeCode.c_str();
+
+    unsigned int compute;
+    compute = glCreateShader(GL_COMPUTE_SHADER);
+    glShaderSource(compute,1,  &cShaderCode, NULL);
+    glCompileShader(compute);
+    checkCompileErrors(compute, "COMPUTE");
+
+    // Shader Program
+    ID = glCreateProgram();
+    glAttachShader(ID, compute);
+    glLinkProgram(ID);
+    checkCompileErrors(ID, "PROGRAM");
+
+    glDeleteShader(compute);
 }
 
 Shader::~Shader()

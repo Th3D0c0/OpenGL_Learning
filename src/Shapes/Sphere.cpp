@@ -1,5 +1,5 @@
 #include <Texture.h>
-#include "Sphere.h"
+#include "Scene/Sphere.h"
 #include <vector>
 #include <cmath>
 

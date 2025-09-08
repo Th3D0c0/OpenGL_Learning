@@ -49,9 +49,12 @@ void Planet::SetupMesh()
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
 	glEnableVertexAttribArray(1);
 
+	// Texture attribute
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(struct Vertex, TextCoord));
+	glEnableVertexAttribArray(2);
+
 	glBindVertexArray(0);
 
-	m_Shader = std::make_unique<Shader>("Shaders/PlanetShaders/Planet.vert", "Shaders/PlanetShaders/Planet.frag");
 }
 
 void Planet::LoadMesh(float radius, unsigned int resolution)
@@ -79,7 +82,7 @@ void Planet::LoadMesh(float radius, unsigned int resolution)
 					cornerDensities[i] = GetDensity(cornerPos.x, cornerPos.y, cornerPos.z);
 				}
 
-				uint8_t cubeIndex = CalculateCubeIndex(cornerDensities, -0.05f);
+				uint8_t cubeIndex = CalculateCubeIndex(cornerDensities, 0.0f);
 
 				if (cubeIndex == 0 || cubeIndex == 255) continue;
 
@@ -107,17 +110,17 @@ void Planet::LoadMesh(float radius, unsigned int resolution)
 								cornerPositions[cornerBIndex],
 								cornerDensities[cornerAIndex],
 								cornerDensities[cornerBIndex],
-								-0.05f);
+								0.0f);
 
-							// 2) Convert GRID → NORMALIZED [-1,1] → WORLD (size = radius)
+							// Convert GRID → NORMALIZED [-1,1] → WORLD (size = radius)
 							glm::vec3 pNorm = (pGrid / (float)(m_CurrentResolution - 1) - 0.5f) * 2.0f;
 
 							glm::vec3 pWorld = pNorm * radius;
 
-							// 3) Compute normal from the density grid (still in grid space)
+							// Compute normal from the density grid (still in grid space)
 							glm::vec3 n = CalculateNormal(pGrid);
 
-							// 4) Store
+							// Store
 							Vertex v;
 							v.Position = pWorld;
 							v.Normal = n;
@@ -149,18 +152,18 @@ void Planet::LoadMesh(float radius, unsigned int resolution)
 	UpdateMeshBuffers();
 }
 
-void Planet::DrawPlanet(glm::mat4 viewMat4, glm::mat4 projMat4, const glm::vec3& lightPos, const glm::vec3& viewPos)
+void Planet::Draw(DrawProperties& properties)
 {
-	m_Shader->use();
-	m_Shader->setUniformValue("projection", projMat4);
-	m_Shader->setUniformValue("view", viewMat4);
-	m_Shader->setUniformValue("model", m_Transform.GetModelMatrix());
+	properties.shader->setUniformValue("model", m_Transform.GetModelMatrix());
 
-	m_Shader->setUniformValue("lightPos", lightPos);
-	m_Shader->setUniformValue("viewPos", viewPos);
-	m_Shader->setUniformValue("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+	glBindVertexArray(m_VAO);
+	glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+}
 
-
+void Planet::DrawPlanetDepthPrepass(DrawProperties& properties)
+{
+	properties.shader->setUniformValue("model", m_Transform.GetModelMatrix());
 
 	glBindVertexArray(m_VAO);
 	glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0);
@@ -189,7 +192,6 @@ std::vector<float> Planet::CreateSphereDensityMap(float radius, unsigned int res
 
 	float noiseScale1 = 1.7f;
 	float noiseScale2 = 2.0f;
-	float noiseScale3 = 5.0f;
 
 	for (int x = 0; x < resolution; x++)
 	{
@@ -214,10 +216,6 @@ std::vector<float> Planet::CreateSphereDensityMap(float radius, unsigned int res
 					(float)x,
 					(float)y,
 					(float)z) * noiseScale2;
-				//density += m_Noise02.GetNoise(
-				//	(float)x,
-				//	(float)y,
-				//	(float)z) * noiseScale3;
 
 				int gridRes = resolution + 1;
 				int index = x + y * gridRes + z * gridRes * gridRes;
@@ -247,7 +245,7 @@ uint8_t Planet::GetTableIndex(glm::ivec3 CubePos, float isoLevel)
 	for (int i = 0; i < 8; i++)
 	{
 		glm::ivec3 cornerPos = CubePos + positionOffset[i];
-		int index = cornerPos.x + cornerPos.y * Planet::m_CurrentResolution + cornerPos.z * Planet::m_CurrentResolution * Planet::m_CurrentResolution;
+		int index = cornerPos.x + cornerPos.y * m_CurrentResolution + cornerPos.z * m_CurrentResolution * m_CurrentResolution;
 		float density = m_DensityValues[index];
 		if (density < isoLevel)
 		{
