@@ -6,6 +6,7 @@
 #include <algorithm>
 
 Planet::Planet()
+	:m_SpecularPower(8.0f)
 {
 	SetupMesh();
 	m_Noise00.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
@@ -155,7 +156,7 @@ void Planet::LoadMesh(float radius, unsigned int resolution)
 void Planet::Draw(DrawProperties& properties)
 {
 	properties.shader->setUniformValue("model", m_Transform.GetModelMatrix());
-
+	properties.shader->setUniformValue("specularPower", m_SpecularPower);
 	glBindVertexArray(m_VAO);
 	glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
@@ -370,4 +371,9 @@ void Planet::SetNoiseFrequency(float frequency1, float frequency2, float frequen
 	m_Noise01.SetFrequency(frequency2);
 	m_Noise02.SetFrequency(frequency3);
 	LoadMesh(m_Radius, m_CurrentResolution);
+}
+
+uint32_t Planet::GetFeatureFlag()
+{
+	return m_Material.GetFeatureFlag();
 }

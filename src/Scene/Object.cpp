@@ -9,7 +9,7 @@ Object::~Object()
 {
 }
 
-void Object::DrawObject(DrawProperties& properties)
+void Object::Draw(DrawProperties& properties)
 {
 	for (Mesh& mesh: m_Meshes)
 	{
@@ -45,4 +45,20 @@ void Object::SetRotation(const glm::vec3& rotation)
 void Object::SetScale(const glm::vec3& scale)
 {
 	m_Transform.SetScale(scale);
+}
+
+std::vector<Mesh> Object::GetMeshes()
+{
+	return m_Meshes;
+}
+
+std::vector<uint32_t> Object::GetFeatureFlags()
+{
+	std::vector<uint32_t>outFlags;
+	for (Mesh& mesh : m_Meshes)
+	{
+		uint32_t meshFlags = mesh.GetFeatureFlag();
+		outFlags.push_back(meshFlags);
+	}
+	return outFlags;
 }

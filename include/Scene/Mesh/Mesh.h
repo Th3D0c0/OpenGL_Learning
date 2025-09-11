@@ -5,9 +5,10 @@
 #include <string>
 #include "Scene/Mesh/MeshData.h"
 #include "Texture.h"
-#include "Shader.h"
+#include "ShaderClass/Shader.h"
 #include "Scene/Transform.h"
 #include "Scene/Camera.h"
+#include "Material.h"
 
 class Mesh
 {
@@ -32,6 +33,7 @@ public:
 
     glm::mat4 GetModelMatrix();
 
+    uint32_t GetFeatureFlag();
     void SetShader(std::string vert, std::string frag);
 
 protected:
@@ -42,6 +44,7 @@ protected:
     std::vector<Vertex> m_Vertices;
     std::vector<unsigned int> m_Indices;
     std::vector<Texture> m_Textures;
+    Material m_Material;
 
     AABB m_AABB;
 
@@ -49,4 +52,5 @@ protected:
     std::shared_ptr<Shader> m_Shader;
 
     DrawProperties m_MeshProperties;
+    float m_SpecularPower;
 };

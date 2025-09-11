@@ -6,7 +6,7 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
-#include "Shader.h"
+#include "ShaderClass/Shader.h"
 
 class Skybox
 {

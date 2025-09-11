@@ -3,7 +3,7 @@
 #include "glm/glm.hpp"
 #include <vector>
 #include "Scene/Mesh/Mesh.h"
-#include "Shader.h"
+#include "ShaderClass/Shader.h"
 #include <unordered_map>
 #include "Scene/Camera.h"
 #include "Scene/Transform.h"

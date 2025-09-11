@@ -20,6 +20,21 @@ void Transform::SetRotation(const glm::vec3 rotation)
     m_Rotation = rotation;
 }
 
+glm::vec3 Transform::GetScale()
+{
+    return m_Scale;
+}
+
+glm::vec3 Transform::GetLocation()
+{
+    return m_Position;
+}
+
+glm::vec3 Transform::GetRotation()
+{
+    return m_Rotation;
+}
+
 glm::mat4 Transform::GetModelMatrix() const
 {
     glm::mat4 model = glm::mat4(1.0f);

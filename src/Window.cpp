@@ -10,8 +10,14 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     AppContext* context = static_cast<AppContext*>(glfwGetWindowUserPointer(window));
     if (context)
     {
+        if (width == 0 || height == 0)
+        {
+            return;
+        }
         // Tell your scene to handle the resize logic
         context->scene->OnWindowResize(width, height);
+        context->sceneFramebuffer->resize(width, height);
+        context->camera->UpdateProjectionMatrix(width, height);
     }
 }
 void glfw_error_callback(int error, const char* description)
@@ -171,7 +177,7 @@ void Window::DrawImGUIControlsWindow(glm::vec3& lightPos)
     ImGui::End();
 }
 
-void Window::DrawSceneView(Framebuffer& framebuffer, Camera& camera, GLFWwindow* nativeWindow)
+void Window::DrawSceneView(Framebuffer& framebuffer, Camera& camera, GLFWwindow* nativeWindow, AppContext& context)
 {
     // A static variable to track if we are currently controlling the camera
     static bool isControllingCamera = false;

@@ -4,10 +4,11 @@
 #include <memory>
 #include "glm/vec3.hpp"
 #include "Scene/Mesh/MeshData.h"
-#include "Shader.h"
+#include "ShaderClass/Shader.h"
 #include "Scene/Transform.h"
 #include "FastNoiseLite.h"
 #include "Scene/Mesh/MeshData.h"
+#include "Scene/Mesh/Material.h"
 
 class Planet
 {
@@ -26,8 +27,11 @@ public:
 
 	void SetNoiseFrequency(float frequency1, float frequency2, float frequency3);
 
+	uint32_t GetFeatureFlag();
+
 private:
 	Transform m_Transform;
+	Material m_Material;
 
 	std::vector<float> CreateSphereDensityMap(float radius, unsigned int resolution);
 	uint8_t GetTableIndex(glm::ivec3 CubePos, float isoLevel);
@@ -54,6 +58,8 @@ private:
 	FastNoiseLite m_Noise00;
 	FastNoiseLite m_Noise01;
 	FastNoiseLite m_Noise02;
+
+	glm::vec3 m_SpecularPower;
 
 	float m_Radius;
 };;

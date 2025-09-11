@@ -1,5 +1,5 @@
 #include "Window.h"
-#include "Shader.h"
+#include "ShaderClass/Shader.h"
 #include "Scene/Mesh/Mesh.h"
 #include "Scene/Object.h"
 #include "Scene/Camera.h"

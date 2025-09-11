@@ -1,0 +1,96 @@
+#version 460 core
+
+// This compute shader's only job is to calculate the side planes for every
+// tile's view frustum and store them in an output buffer.
+// It should be run once at application startup or when the screen resizes.
+
+// The workgroup size should match the tile size used in the main culling shader.
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+// --- Data Structures (must match C++ and other shaders) ---
+
+struct Plane {
+    vec3 normal;
+    float distance;
+};
+
+struct Frustum {
+    Plane planes[4]; // left, right, top, bottom
+};
+
+// --- Uniforms (Inputs from C++) ---
+
+// Camera's inverse projection matrix is needed to go from screen->view space.
+uniform mat4 inverseProjection;
+// Screen dimensions are needed for coordinate conversion.
+uniform vec2 screenDimensions;
+// The size of a tile in pixels.
+uniform uint TILE_SIZE;
+
+
+// --- Output Buffer ---
+
+// The output SSBO where we will write the calculated frustum data.
+// It's bound to binding point 1.
+layout(std430, binding = 1) buffer FrustumBuffer {
+    Frustum frustums[];
+};
+
+
+// --- Helper Functions ---
+
+// Creates a plane from three points in counter-clockwise order.
+Plane createPlane(vec3 p0, vec3 p1, vec3 p2) {
+    Plane p;
+    vec3 v1 = p1 - p0;
+    vec3 v2 = p2 - p0;
+    // The cross product gives the normal. The order ensures it points "inward".
+    p.normal = normalize(cross(v1, v2));
+    // The distance from the origin. For planes passing through the origin (our eye point), this is 0.
+    p.distance = dot(p.normal, p0);
+    return p;
+}
+
+// Converts 2D screen coordinates into a 3D point in view space on the far plane.
+vec3 screenToView(vec2 screenPos) {
+    // Normalize screen coordinates to [0, 1] range.
+    vec2 texCoords = screenPos / screenDimensions;
+    // Convert to clip space coordinates [-1, 1]. We use 1.0 for Z to be on the far plane.
+    vec4 clip = vec4(texCoords * 2.0 - 1.0, 1.0, 1.0);
+    // Un-project to get view space coordinates.
+    vec4 view = inverseProjection * clip;
+    // Perform perspective divide.
+    return view.xyz / view.w;
+}
+
+void main() {
+    // Get the unique ID of this workgroup (this tile).
+    uvec2 workGroupID = gl_WorkGroupID.xy;
+    // Calculate the index in the 1D output buffer for this 2D tile.
+    uint frustumIndex = workGroupID.y * gl_NumWorkGroups.x + workGroupID.x;
+
+    // --- Step 1: Get the 4 corners of the tile in screen space ---
+    vec2 topLeftScreen     = vec2(workGroupID.x * TILE_SIZE, workGroupID.y * TILE_SIZE);
+    vec2 topRightScreen    = topLeftScreen + vec2(TILE_SIZE, 0);
+    vec2 bottomLeftScreen  = topLeftScreen + vec2(0, TILE_SIZE);
+    vec2 bottomRightScreen = topLeftScreen + vec2(TILE_SIZE, TILE_SIZE);
+
+    // --- Step 2: Convert screen corners to 3D points in view space ---
+    vec3 topLeftView     = screenToView(topLeftScreen);
+    vec3 topRightView    = screenToView(topRightScreen);
+    vec3 bottomLeftView  = screenToView(bottomLeftScreen);
+    vec3 bottomRightView = screenToView(bottomRightScreen);
+
+    // The camera ("eye") is at the origin in view space.
+    vec3 eyePos = vec3(0.0);
+
+    // --- Step 3: Build the four side planes ---
+    Frustum f;
+    f.planes[0] = createPlane(eyePos, bottomLeftView, topLeftView);     // Left
+    f.planes[1] = createPlane(eyePos, topRightView, bottomRightView);   // Right
+    f.planes[2] = createPlane(eyePos, topLeftView, topRightView);       // Top
+    f.planes[3] = createPlane(eyePos, bottomRightView, bottomLeftView); // Bottom
+
+    // --- Step 4: Store the result in the output buffer ---
+    frustums[frustumIndex] = f;
+}

@@ -13,6 +13,8 @@ public:
     // Constructor reads and builds the shader
     Shader(const char* vertexPath, const char* fragmentPath);
     Shader(const char* computePath);
+    // Creates a base Object Shader with the Feature List
+    Shader(uint32_t shaderFlags);
     // Destructor to clean up the shader program
     ~Shader();
 
@@ -20,8 +22,6 @@ public:
 
     // Use/activate the shader
     void use();
-
-    
 
     //-------------------------------------------------------------------------
     // Scalar Uniform Setters
@@ -75,4 +75,5 @@ private:
     // Private helper function to check for compile/link errors
     void checkCompileErrors(unsigned int shader, std::string type);
     mutable std::unordered_map<std::string, GLint> m_UniformLocationCache;
+    std::string getShaderDefines(uint32_t shaderFlags);
 };

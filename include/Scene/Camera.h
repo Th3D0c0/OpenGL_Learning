@@ -1,7 +1,8 @@
 #pragma once
 
-#include <glm/glm.hpp> 
 #include <GLFW/glfw3.h> 
+#include <glm/glm.hpp>
+#include "Transform.h"
 
 // Forward declare GLFWwindow
 struct GLFWwindow;
@@ -44,7 +45,7 @@ public:
     // constructor
     Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH);
 
-    glm::mat4 GetViewMatrix() const;
+    glm::mat4 GetViewMatrix() ;
 
     void ProcessKeyboard(Camera_Movement direction, float deltaTime);
     void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch = true);
@@ -56,12 +57,24 @@ public:
     static void MouseCallback(GLFWwindow* window, double xpos, double ypos);
     void setScrollCallback(GLFWwindow* window);
 
-    void SetFirstMouse(bool value) { m_firstMouse = value; };
+    void SetFirstMouse(bool value) { m_firstMouse = value; }
+
+    void UpdateProjectionMatrix(glm::mat4 newProjectionMat4);
+    void UpdateProjectionMatrix(unsigned int width, unsigned int height);
+    glm::mat4 GetProjectionMatrix();
+    glm::mat4 GetModelMatrix();
+
+    void SetLocation(const glm::vec3& location);
+    void SetRotation(const glm::vec3& rotation);
+    void SetScale(const glm::vec3& scale);
+
+    glm::vec3 GetLocation();
 
 public:
     static bool isFocused;
 
 private:
+    Transform m_Transform;
     // Mouse state now lives inside the camera
     float m_lastX;
     float m_lastY;
@@ -69,4 +82,5 @@ private:
 
     void updateCameraVectors();
     static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+    glm::mat4 m_ProjectionMatrix;
 };

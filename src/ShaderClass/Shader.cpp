@@ -1,9 +1,11 @@
-#include "Shader.h"
+#include "ShaderClass/Shader.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+#include "ShaderClass/FeatureFlags.h"
 
 Shader::Shader(const char* vertexPath, const char* fragmentPath)
 {
@@ -47,7 +49,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
     glShaderSource(vertex, 1, &vShaderCode, NULL);
     glCompileShader(vertex);
     
-checkCompileErrors(vertex, "VERTEX");
+	checkCompileErrors(vertex, "VERTEX");
     // Fragment Shader
     fragment = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment, 1, &fShaderCode, NULL);
@@ -105,6 +107,78 @@ Shader::Shader(const char* computePath)
     checkCompileErrors(ID, "PROGRAM");
 
     glDeleteShader(compute);
+}
+
+Shader::Shader(uint32_t shaderFlags)
+{
+    const char* vertexPath = "Shaders/ForwardPlus/Object.vert";
+    const char* fragmentPath = "Shaders/ForwardPlus/Object.frag";
+
+    // Retrieve the vertex/fragment source code from filePath
+    std::string vertexCode;
+    std::string fragmentCode;
+    std::ifstream vShaderFile;
+    std::ifstream fShaderFile;
+
+    // Ensure ifstream objects can throw exceptions:
+    vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    try
+    {
+        // Open files
+        vShaderFile.open(vertexPath);
+        fShaderFile.open(fragmentPath);
+        std::stringstream vShaderStream, fShaderStream;
+        // Read file's buffer contents into streams
+        vShaderStream << vShaderFile.rdbuf();
+        fShaderStream << fShaderFile.rdbuf();
+        // Close file handlers
+        vShaderFile.close();
+        fShaderFile.close();
+        // Convert stream into string
+        vertexCode = vShaderStream.str();
+        fragmentCode = fShaderStream.str();
+    }
+    catch (std::ifstream::failure& e)
+    {
+        std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
+    }
+
+    // Set Shader Flags
+    std::string defines = getShaderDefines(shaderFlags);
+
+    // Create a new string that will exist until the end of the scope
+    std::string finalFragmentCode = defines + fragmentCode;
+
+    // Convert to C Style String
+    const char* vShaderCode = vertexCode.c_str();
+    const char* fShaderCode = finalFragmentCode.c_str();
+
+    // Compile shaders
+    unsigned int vertex, fragment;
+
+    // Vertex Shader
+    vertex = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertex, 1, &vShaderCode, NULL);
+    glCompileShader(vertex);
+
+    checkCompileErrors(vertex, "VERTEX");
+    // Fragment Shader
+    fragment = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragment, 1, &fShaderCode, NULL);
+    glCompileShader(fragment);
+    checkCompileErrors(fragment, "FRAGMENT");
+
+    // Shader Program
+    ID = glCreateProgram();
+    glAttachShader(ID, vertex);
+    glAttachShader(ID, fragment);
+    glLinkProgram(ID);
+    checkCompileErrors(ID, "PROGRAM");
+
+    // Delete the shaders as they're linked into our program now and no longer necessary
+    glDeleteShader(vertex);
+    glDeleteShader(fragment);
 }
 
 Shader::~Shader()
@@ -320,4 +394,30 @@ int Shader::getUniformLocation(const std::string& name) const
     }
     m_UniformLocationCache[name] = location;
     return location;
+}
+
+std::string Shader::getShaderDefines(uint32_t shaderFlags)
+{
+    std::string defines;
+
+    if ((shaderFlags & SHADER_FEATURE_NONE) == 0)
+    {
+        return defines;
+    }
+    if ((shaderFlags & SHADER_FEATURE_Diffuse_MAP) != 0)
+    {
+        defines += "#define USE_DiffuseMap\n";
+    }
+    if ((shaderFlags & SHADER_FEATURE_NORMAL_MAP) != 0)
+    {
+        defines += "#define USE_NormalMap\n";
+    }
+    if ((shaderFlags & SHADER_FEATURE_SPECULAR_MAP) != 0)
+    {
+        defines += "#define USE_SpecularMap\n";
+    }
+    if ((shaderFlags & SHADER_FEATURE_ALPHA_TEST) != 0)
+    {
+        defines += "#define USE_SpecularMap\n";
+    }
 }

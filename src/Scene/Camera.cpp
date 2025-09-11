@@ -1,11 +1,6 @@
+#include "Window.h"
 #include "Scene/Camera.h"
-
-#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "imgui.h"
-
-#include <vector>
-#include <iostream>
 
 bool Camera::isFocused {false};
 
@@ -18,17 +13,18 @@ Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch) :
     m_lastY(0.0f), 
     m_firstMouse(true)
 {
-
+    scroll = 1.0f;
     Position = position;
+    m_Transform.SetLocation(position);
     WorldUp = up;
     Yaw = yaw;
     Pitch = pitch;
     updateCameraVectors();
 }
 
-glm::mat4 Camera::GetViewMatrix() const 
+glm::mat4 Camera::GetViewMatrix()  
 {
-    return glm::lookAt(Position, Position + Front, Up);
+    return glm::lookAt(m_Transform.GetLocation(), m_Transform.GetLocation() + Front, Up);
 }
 
 void Camera::ProcessInput(GLFWwindow* window, double deltaTime)
@@ -51,19 +47,19 @@ void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
 {
     if (isFocused != true) return;
 
-    float velocity = MovementSpeed* scroll * deltaTime;
+    float velocity = MovementSpeed * scroll * deltaTime;
     if (direction == FORWARD)
-        Position += Front * velocity;
+        m_Transform.SetLocation(m_Transform.GetLocation() + Front * velocity);
     if (direction == BACKWARD)
-        Position -= Front * velocity;
+        m_Transform.SetLocation(m_Transform.GetLocation() - Front * velocity);
     if (direction == LEFT)
-        Position -= Right * velocity;
+        m_Transform.SetLocation(m_Transform.GetLocation() - Right * velocity);
     if (direction == RIGHT)
-        Position += Right * velocity;
+        m_Transform.SetLocation(m_Transform.GetLocation() + Right * velocity);
     if (direction == DOWN)
-        Position -= WorldUp * velocity;
+        m_Transform.SetLocation(m_Transform.GetLocation() - WorldUp * velocity);
     if (direction == UP)
-        Position += WorldUp * velocity;
+        m_Transform.SetLocation(m_Transform.GetLocation() + WorldUp * velocity);
 }
 
 // Update ProcessMouseMovement to handle the first-mouse logic
@@ -95,7 +91,6 @@ void Camera::ProcessMouseMovement(float xpos, float ypos, bool constrainPitch)
         if (Pitch < -89.0f)
             Pitch = -89.0f;
     }
-
     updateCameraVectors();
 }
 
@@ -137,6 +132,26 @@ void Camera::setScrollCallback(GLFWwindow* window)
     glfwSetScrollCallback(window, scroll_callback);
 }
 
+void Camera::UpdateProjectionMatrix(glm::mat4 newProjectionMat4)
+{
+    m_ProjectionMatrix = newProjectionMat4;
+}
+
+void Camera::UpdateProjectionMatrix(unsigned int width, unsigned int height)
+{
+    m_ProjectionMatrix = glm::perspective(glm::radians(45.0f), static_cast<float>(width) / static_cast<float>(height), 0.1f, 1000000.0f);
+}
+
+glm::mat4 Camera::GetProjectionMatrix()
+{
+    return m_ProjectionMatrix;
+}
+
+glm::mat4 Camera::GetModelMatrix()
+{
+    return m_Transform.GetModelMatrix();
+}
+
 void Camera::updateCameraVectors()
 {
     glm::vec3 front;
@@ -148,26 +163,47 @@ void Camera::updateCameraVectors()
     Up = glm::normalize(glm::cross(Right, Front));
 }
 
+// In Camera.cpp
 void Camera::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    // You can retrieve your camera object like this if you've set it up
-    Camera* camera = static_cast<Camera*>(glfwGetWindowUserPointer(window));
-    if (camera)
+    AppContext* context = static_cast<AppContext*>(glfwGetWindowUserPointer(window));
+    if (context && context->camera)
     {
         if (yoffset > 0.0)
         {
-			camera->scroll += 0.5f;
+            context->camera->scroll += 0.3f; // Multiply speed
+            if (context->camera->scroll > 50.0f)
+            {
+                context->camera->scroll = 50.0f;
+            }
         }
         if (yoffset < 0.0)
         {
-            if (camera->scroll == 0.0f)
+            context->camera->scroll -= 0.3f; // Divide speed
+            if (context->camera->scroll < 0.1f) // Prevent speed from getting too slow
             {
-                camera->scroll = 0.0f;
-            }
-            else
-            {
-        	camera->scroll -= 0.5f;
+                context->camera->scroll = 0.1f;
             }
         }
     }
+}
+
+void Camera::SetLocation(const glm::vec3& location)
+{
+    m_Transform.SetLocation(location);
+}
+
+void Camera::SetRotation(const glm::vec3& rotation)
+{
+    m_Transform.SetRotation(rotation);
+}
+
+void Camera::SetScale(const glm::vec3& scale)
+{
+    m_Transform.SetScale(scale);
+}
+
+glm::vec3 Camera::GetLocation()
+{
+    return m_Transform.GetLocation();
 }

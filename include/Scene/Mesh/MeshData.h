@@ -1,7 +1,7 @@
 #pragma once
 
 #include "glm/glm.hpp"
-#include "Shader.h"
+#include "ShaderClass/Shader.h"
 
 struct Vertex
 {
@@ -19,8 +19,8 @@ struct AABB
 struct DrawProperties
 {
     Shader* shader;
-    bool isWireframe;
-    bool useTexture;
+    bool isWireframe = false;
+    bool useTexture = false;
     glm::mat4 view;
     glm::mat4 projection;
     glm::mat4 ObjectModel;

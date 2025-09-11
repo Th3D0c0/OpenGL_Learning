@@ -1,12 +1,10 @@
 #pragma once
-
 #include <GL/glew.h>
 #include <GLFW/glfw3.h> 
 #include <glm/glm.hpp>
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
-
 #include "Framebuffer.h"
 #include "Scene/Camera.h"
 #include "Scene/Scene.h"
@@ -16,6 +14,8 @@ struct AppContext
 {
     Camera* camera;
     Scene* scene;
+    GLFWwindow* window;
+    Framebuffer* sceneFramebuffer;
 };
 
 class Window
@@ -43,7 +43,7 @@ public:
 
     // IMGUI WINDOWS
     void DrawImGUIControlsWindow(glm::vec3& lightPos);
-    void DrawSceneView(Framebuffer& framebuffer, Camera& camera, GLFWwindow* nativeWindow);
+    void DrawSceneView(Framebuffer& framebuffer, Camera& camera, GLFWwindow* nativeWindow, AppContext& context);
 
 private:
     GLFWwindow* m_Window; // Opaque window handle

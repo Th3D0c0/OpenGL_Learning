@@ -5,7 +5,7 @@
 
 
 Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, std::vector<Texture> textures)
-    : m_Vertices(vertices), m_Indices(indices), m_Textures(std::move(textures))
+    : m_Vertices(vertices), m_Indices(indices), m_Textures(std::move(textures)), m_SpecularPower(8.0f)
 {
     // Generate and bind the VAO and VBO
     glGenVertexArrays(1, &m_VAO);
@@ -76,8 +76,8 @@ void Mesh::Draw(DrawProperties& globalProperties)
         m_Textures[i].bind(i);
     }
 
-    globalProperties.shader->setUniformValue("viewPos", globalProperties.viewPosition);
     globalProperties.shader->setUniformValue("model", m_Transform.GetModelMatrix());
+    globalProperties.shader->setUniformValue("specularPower", m_SpecularPower);
 
     if (globalProperties.instanceCount > 0)
     {
@@ -86,8 +86,8 @@ void Mesh::Draw(DrawProperties& globalProperties)
             glBindVertexArray(m_VAO);
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glDrawElementsInstanced(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0, globalProperties.instanceCount);
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             glBindVertexArray(0);
-
             glActiveTexture(GL_TEXTURE0);
         }
         else
@@ -95,7 +95,6 @@ void Mesh::Draw(DrawProperties& globalProperties)
 	    glBindVertexArray(m_VAO);
 	    glDrawElementsInstanced(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0, globalProperties.instanceCount);
 	    glBindVertexArray(0);
-
 	    glActiveTexture(GL_TEXTURE0);
         }
     }
@@ -107,17 +106,13 @@ void Mesh::Draw(DrawProperties& globalProperties)
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0);
             glBindVertexArray(0);
-
             glActiveTexture(GL_TEXTURE0);
         }
         else
         {
-            // Draw the mesh
             glBindVertexArray(m_VAO);
             glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0);
             glBindVertexArray(0);
-
-            // Always good practice to set everything back to defaults once configured.
             glActiveTexture(GL_TEXTURE0);
         }
     }
@@ -171,6 +166,11 @@ void Mesh::SetScale(const glm::vec3& scale)
 glm::mat4 Mesh::GetModelMatrix()
 {
     return m_Transform.GetModelMatrix();
+}
+
+uint32_t Mesh::GetFeatureFlag()
+{
+    return m_Material.GetFeatureFlag();
 }
 
 void Mesh::SetShader(std::string vert, std::string frag)
