@@ -11,9 +11,8 @@ out VS_OUT {
     vec3 FragPosWorld;
     vec3 NormalWorld;
     vec2 TexCoords;
+    mat3 TBN;
 } vs_out;
-
-out mat3 TBN;
 
 uniform mat4 model;
 uniform mat4 view;

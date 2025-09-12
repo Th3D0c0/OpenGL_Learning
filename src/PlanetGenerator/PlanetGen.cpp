@@ -54,6 +54,14 @@ void Planet::SetupMesh()
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(struct Vertex, TextCoord));
 	glEnableVertexAttribArray(2);
 
+	// Tangent attribute
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Tangent));
+	glEnableVertexAttribArray(3);
+
+	// Bitangent attribute
+	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Bitangent));
+	glEnableVertexAttribArray(4);
+
 	glBindVertexArray(0);
 
 	m_Material.CreateNormalMapAndLoad("res/NormalMaps/rock_norm_8k.png");
@@ -124,10 +132,33 @@ void Planet::LoadMesh(float radius, unsigned int resolution)
 							// Compute normal from the density grid (still in grid space)
 							glm::vec3 n = CalculateNormal(pGrid);
 
+							// --- START: TANGENT CALCULATION ---
+							glm::vec3 tangent;
+							glm::vec3 bitangent;
+
+							// Use a fixed "up" vector to find a direction perpendicular to the normal.
+							glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+
+							// Handle the "pole" problem: if the normal is parallel to the up vector...
+							if (glm::abs(glm::dot(n, up)) > 0.999f)
+							{
+								// ...use a different axis, like the X-axis.
+								up = glm::vec3(1.0f, 0.0f, 0.0f);
+							}
+
+							// Calculate the tangent using the cross product.
+							tangent = glm::normalize(glm::cross(up, n));
+
+							// Calculate the bitangent.
+							bitangent = glm::normalize(glm::cross(n, tangent));
+							// --- END: TANGENT CALCULATION ---
+
 							// Store
 							Vertex v;
 							v.Position = pWorld;
 							v.Normal = n;
+							v.Tangent = tangent;
+							v.Bitangent = bitangent;
 							m_Vertices.push_back(v);
 							nrOfVert++;
 

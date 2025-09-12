@@ -16,9 +16,8 @@ in VS_OUT {
     vec3 FragPosWorld;
     vec3 NormalWorld;
     vec2 TexCoords;
+    mat3 TBN;
 } fs_in;
-
-in mat3 TBN;
 
 #ifdef USE_DiffuseMap
 uniform sampler2D texture_diffuse1;
@@ -209,7 +208,7 @@ void main()
     vec3 normalTangentSpace = normalize(triplanarNormalColor.rgb * 2.0 - 1.0);
 
     // 3. Transform from TANGENT space to VIEW space using the TBN matrix
-    N_viewSpace = normalize(TBN * normalTangentSpace);
+    N_viewSpace = normalize(fs_in.TBN * normalTangentSpace);
     #else
     // If not using a normal map, the interpolated normal is already in view space
     N_viewSpace = normalize(fs_in.NormalView);
