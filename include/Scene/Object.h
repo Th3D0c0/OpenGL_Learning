@@ -21,8 +21,6 @@ public:
 
 	std::vector<Mesh> GetMeshes();
 
-	std::vector<uint32_t>GetFeatureFlags();
-
 	DrawProperties properties;
 
 private:

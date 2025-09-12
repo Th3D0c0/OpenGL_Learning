@@ -144,11 +144,25 @@ Shader::Shader(uint32_t shaderFlags)
         std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
     }
 
+
     // Set Shader Flags
     std::string defines = getShaderDefines(shaderFlags);
+    std::string placeholder = "// <DEFINES_PLACEHOLDER>";
+    size_t pos = fragmentCode.find(placeholder);
 
-    // Create a new string that will exist until the end of the scope
-    std::string finalFragmentCode = defines + fragmentCode;
+    std::string finalFragmentCode = fragmentCode;
+    if (pos != std::string::npos)
+    {
+        // If the placeholder is found, replace it with our defines
+        finalFragmentCode.replace(pos, placeholder.length(), defines);
+    }
+    else
+    {
+        // Fallback or error if placeholder isn't in the shader file
+        std::cerr << "Warning: <DEFINES_PLACEHOLDER> not found in fragment shader." << std::endl;
+        // You could just prepend here as a fallback if you want
+        // finalFragmentCode = defines + fragmentCode;
+    }
 
     // Convert to C Style String
     const char* vShaderCode = vertexCode.c_str();
@@ -399,11 +413,6 @@ int Shader::getUniformLocation(const std::string& name) const
 std::string Shader::getShaderDefines(uint32_t shaderFlags)
 {
     std::string defines;
-
-    if ((shaderFlags & SHADER_FEATURE_NONE) == 0)
-    {
-        return defines;
-    }
     if ((shaderFlags & SHADER_FEATURE_Diffuse_MAP) != 0)
     {
         defines += "#define USE_DiffuseMap\n";
@@ -418,6 +427,8 @@ std::string Shader::getShaderDefines(uint32_t shaderFlags)
     }
     if ((shaderFlags & SHADER_FEATURE_ALPHA_TEST) != 0)
     {
-        defines += "#define USE_SpecularMap\n";
+        defines += "#define USE_AlphaTest\n";
     }
+
+    return defines;
 }

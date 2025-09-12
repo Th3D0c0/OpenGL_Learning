@@ -68,6 +68,10 @@ void Mesh::Draw(DrawProperties& globalProperties)
         {
             number = std::to_string(specularNr++);
         }
+        else if (type == "texture_normal")
+        {
+            number = std::to_string(specularNr++);
+        }
 
         // Set the sampler uniform in the shader (e.g., "texture_diffuse1")
         globalProperties.shader->setUniformValue((type + number), (int)i);
@@ -170,7 +174,7 @@ glm::mat4 Mesh::GetModelMatrix()
 
 uint32_t Mesh::GetFeatureFlag()
 {
-    return m_Material.GetFeatureFlag();
+	return m_Material.GetFeatureFlag();
 }
 
 void Mesh::SetShader(std::string vert, std::string frag)

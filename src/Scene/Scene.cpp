@@ -117,15 +117,56 @@ void Scene::CreateShaders()
 	{
 		for (Mesh& mesh : object->GetMeshes())
 		{
-			m_ShaderChache.GetShader(mesh.GetFeatureFlag());
-			m_renderQueue[mesh.GetFeatureFlag()].push_back(&mesh);
+			uint32_t flag = mesh.GetFeatureFlag();
+			
+			m_ShaderChache.GetShader(flag);
+			m_renderQueue[flag].push_back(&mesh);
 		}
 	}
 	for (const auto& planet : m_Planet)
 	{
-		m_ShaderChache.GetShader(planet->GetFeatureFlag());
-		m_renderQueue[planet->GetFeatureFlag()].push_back(planet.get());
+		const uint32_t flag = planet->GetFeatureFlag();
+		m_ShaderChache.GetShader(flag);
+		m_renderQueue[flag].push_back(planet.get());
 	}
+
+	std::cout << "--- Render Queue Contents ---" << std::endl;
+	if (m_renderQueue.empty())
+	{
+		std::cout << "Queue is empty." << std::endl;
+		return;
+	}
+
+	for (const auto& pair : m_renderQueue)
+	{
+		// Print the shader flag (the key for this group)
+		std::cout << "Shader Flag Group [" << pair.first << "]:" << std::endl;
+
+		// Loop through the vector of Drawables for this flag
+		for (const Drawable& drawableVariant : pair.second)
+		{
+			std::visit([&](auto* drawablePtr) {
+
+				// Get the specific feature flag from the object itself
+				uint32_t objectFlag = drawablePtr->GetFeatureFlag();
+
+				// Use a compile-time if to check the type of the pointer
+				if constexpr (std::is_same_v<decltype(drawablePtr), Mesh*>)
+				{
+					std::cout << "  - Drawable: Mesh at address ";
+				}
+				else if constexpr (std::is_same_v<decltype(drawablePtr), Planet*>)
+				{
+					std::cout << "  - Drawable: Planet at address ";
+				}
+
+				// Print the memory address and the associated flag
+				std::cout << drawablePtr << " (Flag: " << objectFlag << ")" << std::endl;
+
+				}, drawableVariant);
+		}
+	}
+	std::cout << "---------------------------" << std::endl;
 }
 
 void Scene::RenderPrepass(DrawProperties& properties)

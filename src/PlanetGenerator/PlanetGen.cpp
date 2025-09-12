@@ -56,6 +56,9 @@ void Planet::SetupMesh()
 
 	glBindVertexArray(0);
 
+	m_Material.CreateNormalMapAndLoad("res/NormalMaps/rock_norm_8k.png");
+	m_Material.SetNormalMapEnabled(true);
+	m_Material.SetNormalMapStrength(1.0f);
 }
 
 void Planet::LoadMesh(float radius, unsigned int resolution)
@@ -149,14 +152,44 @@ void Planet::LoadMesh(float radius, unsigned int resolution)
 			}
 		}
 	}
-	printf("Verteces: %d\n", nrOfVert);
 	UpdateMeshBuffers();
 }
 
 void Planet::Draw(DrawProperties& properties)
 {
+	// Counters for texture types to build the uniform names
+	unsigned int diffuseNr = 1;
+	unsigned int specularNr = 1;
+	unsigned int normalNr = 1;
+
+	std::vector<Texture*> allTex = m_Material.GetAllTextures();
+	for (unsigned int i = 0; i < allTex.size(); i++)
+	{
+		std::string number;
+		std::string type = allTex[i]->getType();
+
+		if (type == "texture_diffuse")
+		{
+			number = std::to_string(diffuseNr++);
+		}
+		else if (type == "texture_specular")
+		{
+			number = std::to_string(specularNr++);
+		}
+		else if (type == "texture_normal")
+		{
+			number = std::to_string(normalNr++);
+		}
+		// Set the sampler uniform in the shader (e.g., "texture_diffuse1")
+		properties.shader->setUniformValue((type + number), (int)i);
+
+		// Bind the texture to the correct texture unit
+		allTex[i]->bind(i);
+	}
+
 	properties.shader->setUniformValue("model", m_Transform.GetModelMatrix());
 	properties.shader->setUniformValue("specularPower", m_SpecularPower);
+	properties.shader->setUniformValue("normalTextureScale", m_Material.GetNormalMapScaling());
 	glBindVertexArray(m_VAO);
 	glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
@@ -369,11 +402,11 @@ void Planet::SetNoiseFrequency(float frequency1, float frequency2, float frequen
 {
 	m_Noise00.SetFrequency(frequency1);
 	m_Noise01.SetFrequency(frequency2);
-	m_Noise02.SetFrequency(frequency3);
 	LoadMesh(m_Radius, m_CurrentResolution);
 }
 
 uint32_t Planet::GetFeatureFlag()
 {
-	return m_Material.GetFeatureFlag();
+	uint32_t outFlag = m_Material.GetFeatureFlag();
+	return outFlag;
 }

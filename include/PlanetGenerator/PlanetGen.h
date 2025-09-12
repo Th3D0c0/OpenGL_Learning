@@ -45,6 +45,7 @@ private:
 	void UpdateMeshBuffers();
 	void SetupMesh();
 
+	glm::mat4 TBN;
 	std::vector<float> m_DensityValues;
 	int m_CurrentResolution;
 
@@ -57,9 +58,8 @@ private:
 
 	FastNoiseLite m_Noise00;
 	FastNoiseLite m_Noise01;
-	FastNoiseLite m_Noise02;
 
 	glm::vec3 m_SpecularPower;
 
 	float m_Radius;
-};;
+};

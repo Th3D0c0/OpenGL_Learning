@@ -56,27 +56,20 @@ int main()
 
     DrawProperties depthPrepassDrawProperties;
 
-    Sphere lightSphere(0.1f, 36, 18);
-    glm::vec3 lightPos(15.0f, 0.0f, 0.0f);
-
-    Sphere BoundarySphere(8.0f, 36, 18);
-    glm::vec3 BoundarySpherePos(0.0f, 0.0f, 0.0f);
-
-    Sphere instancedSphere(1.0f, 16, 12);
-    ParticleSystem spherePS(instancedSphere, 5000);
+    glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
 
     auto planet = std::make_unique<Planet>();
     planet->LoadMesh(10, 128);
     scene.AddObject(std::move(planet));
 
     auto frameLight = std::make_unique<Light>();
-        frameLight->positionWS = glm::vec4(lightPos, 1.0f);
-        frameLight->directionWS = glm::vec4(glm::normalize(glm::vec3(0.0f) - lightPos), 0.0f);// Transform to View Space
-        frameLight->color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        frameLight->intensity = 0.2f;
-        frameLight->range = 60.0f;
-        frameLight->type = 0; 
-        scene.AddLight(std::move(frameLight));
+    frameLight->positionWS = glm::vec4(lightPos, 1.0f);
+    frameLight->directionWS = glm::vec4(glm::vec3(15.0f, 3.0f, 0.0f), 1.0f);// Transform to View Space
+    frameLight->color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    frameLight->intensity = 0.5f;
+    frameLight->range = 60.0f;
+    frameLight->type = 2; 
+    scene.AddLight(std::move(frameLight));
         
 
     Skybox skybox;
@@ -153,14 +146,12 @@ int main()
         //    spherePS.Draw(particleShader, view, projection, lightPos, camera);
 
         scene.RenderScene(view, camera.GetProjectionMatrix());
+
         //------------End Drawing Objects------------
 
         sceneFramebuffer.unbind();
 
         window.startImGUIFrame();
-        ImGui::Begin("Count");
-        ImGui::Value("Value: %d", spherePS.GetParticleCount());
-        ImGui::End();
         window.DrawSceneView(sceneFramebuffer, camera, window.getNativeWindow(), context);
         window.DrawImGUIControlsWindow(lightPos);
 

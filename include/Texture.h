@@ -10,6 +10,7 @@ public:
 
     // Loads the texture from the file path provided in the constructor
     bool LoadTexture();
+    bool loadNormalTexture();
 
     // Binds the texture to a specific texture unit
     void bind(unsigned int textureUnit) const;
@@ -25,5 +26,5 @@ private:
     unsigned int m_TextureID;
     int m_Width, m_Height, m_BitDepth;
     std::string m_FileLocation;
-    std::string m_Type; // e.g., "texture_diffuse", "texture_specular"
+    std::string m_Type; // e.g., "diffuse", "specular", "normal"
 };
