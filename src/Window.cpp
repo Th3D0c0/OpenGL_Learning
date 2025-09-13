@@ -86,6 +86,7 @@ Window::Window(int width, int height, const char* title, bool fullscreen)
 
     std::cout << "Using GL Version: " << glGetString(GL_VERSION) << std::endl;
 
+#ifdef ENGINE_EDITOR
     // --- IMGUI INITIALIZATION ---
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -107,12 +108,22 @@ Window::Window(int width, int height, const char* title, bool fullscreen)
     }
     ImGui_ImplGlfw_InitForOpenGL(m_Window, true);
     ImGui_ImplOpenGL3_Init("#version 460");
+#endif
 
+    SetupRenderQuad();
 }
 
 Window::~Window()
 {
-    // Clean up resources
+#ifdef ENGINE_EDITOR
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+#endif
+
+    glDeleteVertexArrays(1, &m_QuadVAO);
+    glDeleteBuffers(1, &m_QuadVBO);
+
     glfwDestroyWindow(m_Window);
     glfwTerminate();
 }
@@ -122,6 +133,7 @@ bool Window::shouldClose()
     return glfwWindowShouldClose(m_Window);
 }
 
+#ifdef ENGINE_EDITOR
 void Window::startImGUIFrame()
 {
     ImGui_ImplOpenGL3_NewFrame();
@@ -233,24 +245,6 @@ void Window::DrawSceneView(Framebuffer& framebuffer, Camera& camera, GLFWwindow*
     ImGui::PopStyleVar();
 }
 
-void Window::swapBuffers()
-{
-    // Swaps the front and back buffers
-    glfwSwapBuffers(m_Window);
-}
-
-void Window::pollEvents()
-{
-    // Poll for and process events
-    glfwPollEvents();
-}
-
-GLFWwindow* Window::getNativeWindow() const
-{
-    return m_Window;
-}
-
-
 void Window::ImGUIRender()
 {
     // End the DockSpaceHost window. This concludes the scope for dockable windows.
@@ -274,5 +268,71 @@ void Window::ImGUIRender()
         ImGui::RenderPlatformWindowsDefault();
         glfwMakeContextCurrent(backup_current_context);
     }
+    swapBuffers();
 }
+#endif
+
+void Window::swapBuffers()
+{
+    // Swaps the front and back buffers
+    glfwSwapBuffers(m_Window);
+}
+
+void Window::SetupRenderQuad()
+{
+    // 1. Create VAO and VBO
+    glGenVertexArrays(1, &m_QuadVAO);
+    glGenBuffers(1, &m_QuadVBO);
+
+    // 2. Bind them and upload vertex data
+    glBindVertexArray(m_QuadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, m_QuadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(m_QuadVertices), &m_QuadVertices, GL_STATIC_DRAW);
+
+    // 3. Set up vertex attribute pointers
+    // The vertex shader expects position at location 0
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+
+    // The vertex shader expects texture coordinates at location 1
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void Window::pollEvents()
+{
+    // Poll for and process events
+    glfwPollEvents();
+}
+
+GLFWwindow* Window::getNativeWindow() const
+{
+    return m_Window;
+}
+
+void Window::RenderWindow(Shader& renderShader, Framebuffer& framebuffer)
+{
+#ifdef ENGINE_EDITOR
+    ImGUIRender();
+#else
+    int display_w, display_h;
+    glfwGetFramebufferSize(m_Window, &display_w, &display_h);
+    glViewport(0, 0, display_w, display_h);
+    glClearColor(0.45f, 0.55f, 0.60f, 1.00f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    renderShader.use();
+    glBindVertexArray(m_QuadVAO);
+    glDisable(GL_DEPTH_TEST);
+    glBindTexture(GL_TEXTURE_2D, framebuffer.getTextureColorBuffer());
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    swapBuffers();
+    glEnable(GL_DEPTH_TEST);
+#endif
+}
+
+
 

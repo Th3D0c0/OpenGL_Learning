@@ -22,9 +22,11 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <GLFW/glfw3.h> 
 
+#ifdef ENGINE_EDITOR
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
+#endif
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>

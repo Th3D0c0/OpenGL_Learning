@@ -45,7 +45,9 @@ void Camera::ProcessInput(GLFWwindow* window, double deltaTime)
 
 void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
 {
+#ifdef ENGINE_EDITOR
     if (isFocused != true) return;
+#endif
 
     float velocity = MovementSpeed * scroll * deltaTime;
     if (direction == FORWARD)

@@ -33,11 +33,13 @@ int main()
     Window window(1800, 1200, "Physics Simulation", false);
     GLFWwindow* nativeWindow = window.getNativeWindow();
     camera.setScrollCallback(window.getNativeWindow());
+    window.SetupRenderQuad();
 
     // --- Shaders and Objects ---
     Shader lightingShader("Shaders/phongLighting.vert", "Shaders/phongLighting.frag");
     Shader lightSourceShader("Shaders/LightSource.vert", "Shaders/LightSource.frag");
     Shader particleShader("Shaders/ParticleShaders/particle.vert", "Shaders/ParticleShaders/particle.frag");
+    Shader ScreenSpaceRender("Shaders/ReleaseRender/ScreenSpaceShader.vert", "Shaders/ReleaseRender/ScreenSpaceShader.frag");
 
     // Framebuffer for Imgui
     Framebuffer sceneFramebuffer(1800, 1200);
@@ -53,6 +55,12 @@ int main()
     context.sceneFramebuffer = &sceneFramebuffer;
 
     glfwSetWindowUserPointer(nativeWindow, &context);
+
+#ifndef ENGINE_EDITOR
+    glfwSetInputMode(nativeWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(nativeWindow, Camera::MouseCallback);
+    glfwSetWindowUserPointer(nativeWindow, &camera);
+#endif
 
     DrawProperties depthPrepassDrawProperties;
 
@@ -153,18 +161,14 @@ int main()
 
         sceneFramebuffer.unbind();
 
+		#ifdef ENGINE_EDITOR
         window.startImGUIFrame();
         window.DrawSceneView(sceneFramebuffer, camera, window.getNativeWindow(), context);
         window.DrawImGUIControlsWindow(lightPos);
 
-        window.ImGUIRender();
-        window.swapBuffers();
+		#endif
+
+        window.RenderWindow(ScreenSpaceRender, sceneFramebuffer);
     }
-
-    // --- CLEANUP ---
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-
-    return 0;
+	return 0;
 }

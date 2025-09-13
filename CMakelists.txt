@@ -99,6 +99,9 @@ if(MSVC)
     )
 endif()
 
+# Define ENGINE_EDITOR macro ONLY for the Debug configuration
+target_compile_definitions(PhysicsTest PRIVATE "$<$<CONFIG:Debug>:ENGINE_EDITOR>")
+
 # Find all .cpp files in 'src' and add them to the executable
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/*.cpp")
 target_sources(PhysicsTest PRIVATE ${SOURCES})
