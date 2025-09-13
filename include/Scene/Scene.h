@@ -11,6 +11,7 @@
 #include "ShaderClass/Shader.h"
 #include "Scene/Mesh/MeshData.h"
 #include "ShaderClass/ShaderCache.h"
+#include "Material/MaterialManager.h"
 
 #include "glm/glm.hpp"
 
@@ -30,8 +31,9 @@ public:
 
 	void AddObject(std::unique_ptr<Planet> planet);
 	void AddObject(std::unique_ptr<Object> object);
+	void LoadObject(std::string filePath);
 
-	using Drawable = std::variant<Mesh*, Planet*>;
+	using Drawable = std::variant<const Mesh*, const Planet*>;
 
 private:
 	std::vector<std::unique_ptr<Object>> m_Object;
@@ -46,6 +48,8 @@ private:
 	ShaderCache m_ShaderChache;
 	std::map <uint32_t, std::vector<Drawable>> m_renderQueue;
 	unsigned int m_ScreenWidth, m_ScreenHeight;
+
+	std::shared_ptr<MaterialManager> m_MaterialManager;
 
 	unsigned int m_DepthFBO;
 	unsigned int m_DepthTexture;

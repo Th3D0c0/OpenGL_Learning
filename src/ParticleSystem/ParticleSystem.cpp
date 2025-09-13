@@ -9,7 +9,7 @@
 unsigned int  Particle::s_NextID = 0;
 
 ParticleSystem::ParticleSystem(Mesh& mesh, unsigned int maxParticleCount)
-	:m_Mesh(mesh), m_MaxParticleCount(maxParticleCount), m_Gravity(0.0f, -10.0f, 0.0f), timeInterval(0.0f), m_CellSize(0.2), 
+	:m_Mesh(&mesh), m_MaxParticleCount(maxParticleCount), m_Gravity(0.0f, -10.0f, 0.0f), timeInterval(0.0f), m_CellSize(0.2), 
 	m_ParticlesGPU(0.0f)
 {
 	m_ParticlesGPU.resize(m_MaxParticleCount);
@@ -250,5 +250,5 @@ void ParticleSystem::Draw(DrawProperties& globalProperties)
 	globalProperties.shader->setUniformValue("viewPos", globalProperties.viewPosition);
 	globalProperties.shader->setUniformValue("lightColor", 1.0f, 1.0f, 1.0f);
 	globalProperties.shader->setUniformValue("model", m_Transform.GetModelMatrix());
-	m_Mesh.Draw(globalProperties);
+	m_Mesh->Draw(globalProperties);
 }

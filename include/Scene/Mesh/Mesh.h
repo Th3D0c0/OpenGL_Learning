@@ -4,22 +4,30 @@
 #include <glm/glm.hpp>
 #include <string>
 #include "Scene/Mesh/MeshData.h"
-#include "Texture.h"
+#include "Material/Texture.h"
 #include "ShaderClass/Shader.h"
 #include "Scene/Transform.h"
 #include "Scene/Camera.h"
-#include "Material.h"
+#include "Material/Material.h"
+
 
 class Mesh
 {
 public:
     // Constructor
-    Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, std::vector<Texture> textures);
+    Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, std::shared_ptr<Material> material);
+    Mesh(const Mesh&) = delete;
+    Mesh& operator=(const Mesh&) = delete;
+    // Allow Moving
+    // This defines how to efficiently transfer a Mesh's data.
+    Mesh(Mesh&& other) noexcept;
+    Mesh& operator=(Mesh&& other) noexcept;
+
     // Destructor
     ~Mesh();
 
     // Renders the mesh
-    void Draw(DrawProperties& globalProperties);
+    void Draw(DrawProperties& globalProperties) const;
     void DrawMeshDepthPrepass(DrawProperties& properties);
     
     AABB CreateAABB(std::vector<Vertex>& vertices);
@@ -33,7 +41,7 @@ public:
 
     glm::mat4 GetModelMatrix();
 
-    uint32_t GetFeatureFlag();
+    const uint32_t GetFeatureFlag() const;
     void SetShader(std::string vert, std::string frag);
 
 protected:
@@ -43,8 +51,7 @@ protected:
 
     std::vector<Vertex> m_Vertices;
     std::vector<unsigned int> m_Indices;
-    std::vector<Texture> m_Textures;
-    Material m_Material;
+    std::shared_ptr<Material>m_Material;
 
     AABB m_AABB;
 

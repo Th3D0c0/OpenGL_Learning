@@ -9,7 +9,8 @@ Scene::Scene(unsigned int screenWidth, unsigned int screenHeight)
 	m_ScreenWidth(screenWidth), m_ScreenHeight(screenHeight),
 	m_TileSize(16),
 	m_MaxLightCount(1024),
-	m_firstRun(true)
+	m_firstRun(true),
+	m_MaterialManager(std::make_shared<MaterialManager>())
 {
 	// --- Create the Light SSBO ---
 	glGenBuffers(1, &m_LightSSBO);
@@ -108,14 +109,13 @@ void Scene::RenderScene(const glm::mat4& view, const glm::mat4& projection)
 				}, drawableVariant);
 		}
 	}
-	
 }
 
 void Scene::CreateShaders()
 {
 	for (const auto& object : m_Object)
 	{
-		for (Mesh& mesh : object->GetMeshes())
+		for (const Mesh& mesh : object->GetMeshes())
 		{
 			uint32_t flag = mesh.GetFeatureFlag();
 			
@@ -129,44 +129,6 @@ void Scene::CreateShaders()
 		m_ShaderChache.GetShader(flag);
 		m_renderQueue[flag].push_back(planet.get());
 	}
-
-	std::cout << "--- Render Queue Contents ---" << std::endl;
-	if (m_renderQueue.empty())
-	{
-		std::cout << "Queue is empty." << std::endl;
-		return;
-	}
-
-	for (const auto& pair : m_renderQueue)
-	{
-		// Print the shader flag (the key for this group)
-		std::cout << "Shader Flag Group [" << pair.first << "]:" << std::endl;
-
-		// Loop through the vector of Drawables for this flag
-		for (const Drawable& drawableVariant : pair.second)
-		{
-			std::visit([&](auto* drawablePtr) {
-
-				// Get the specific feature flag from the object itself
-				uint32_t objectFlag = drawablePtr->GetFeatureFlag();
-
-				// Use a compile-time if to check the type of the pointer
-				if constexpr (std::is_same_v<decltype(drawablePtr), Mesh*>)
-				{
-					std::cout << "  - Drawable: Mesh at address ";
-				}
-				else if constexpr (std::is_same_v<decltype(drawablePtr), Planet*>)
-				{
-					std::cout << "  - Drawable: Planet at address ";
-				}
-
-				// Print the memory address and the associated flag
-				std::cout << drawablePtr << " (Flag: " << objectFlag << ")" << std::endl;
-
-				}, drawableVariant);
-		}
-	}
-	std::cout << "---------------------------" << std::endl;
 }
 
 void Scene::RenderPrepass(DrawProperties& properties)
@@ -292,6 +254,11 @@ void Scene::AddObject(std::unique_ptr<Planet> planet)
 void Scene::AddObject(std::unique_ptr<Object> object)
 {
 	m_Object.push_back(std::move(object));
+}
+
+void Scene::LoadObject(std::string filePath)
+{
+	m_Object.emplace_back(std::make_unique<Object>(filePath, m_MaterialManager));
 }
 
 void Scene::DepthPrepass(DrawProperties& properties)

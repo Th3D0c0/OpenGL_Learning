@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include "Texture.h"
+#include "Material/Texture.h"
 #include "../../../out/build/x64-Debug/_deps/assimp-src/code/AssetLib/glTF2/glTF2Exporter.h"
 #include "glm/glm.hpp"
 
@@ -11,7 +11,7 @@ public:
 	Material();
 	~Material();
 	unsigned int GetID();
-	uint32_t GetFeatureFlag();
+	const uint32_t GetFeatureFlag() const;
 
 	void DisableFeatureFlags();
 	void SetDiffuseMapEnabled(bool value);
@@ -28,12 +28,12 @@ public:
 	void CreateNormalMapAndLoad(std::string imagePath);
 	void CreateSpecularMapAndLoad(std::string imagePath);
 
-	std::vector<Texture*> GetAllTextures();
-	float GetNormalMapScaling();
+	const std::vector<const Texture*> GetAllTextures() const;
+	const float GetNormalMapScaling() const;
+	glm::vec3 GetDiffuseColor();
 
 private:
 	static unsigned int s_MaterialCount;
-
 	unsigned int m_ID;
 
 	std::vector<Texture> m_DiffuseMap;

@@ -76,12 +76,14 @@ int main()
     std::vector<std::string> faces {
         "res/SkyTexture/px.png",
         "res/SkyTexture/nx.png",
-        "res/SkyTexture/py.png",
         "res/SkyTexture/ny.png",
+        "res/SkyTexture/py.png",
         "res/SkyTexture/pz.png",
         "res/SkyTexture/nz.png"
     };
     skybox.load(faces);
+
+    scene.LoadObject("res/Models/Monkey.obj");
 
     scene.CreateShaders();
 

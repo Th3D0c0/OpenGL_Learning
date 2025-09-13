@@ -1,7 +1,8 @@
-#include <Texture.h>
+#include <Material/Texture.h>
 #include "Scene/Sphere.h"
 #include <vector>
 #include <cmath>
+#include <memory>
 
 
 // Keep these includes for M_PI if not defined
@@ -66,7 +67,7 @@ Sphere::Sphere(float radius, int sectorCount, int stackCount)
             }
             return indices;
         }(),
-            std::vector<Texture>()
+            std::make_shared<Material>()
 	)
 {
 }

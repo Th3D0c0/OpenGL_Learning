@@ -35,10 +35,11 @@ uniform vec3 ambientColor;
 uniform float specularPower;
 uniform uint TILE_SIZE;
 uniform mat4 view;
+
 // --- Structs (must be identical everywhere) ---
 struct Light {
-    vec4 positionVS;    // RENAMED: Data is expected in view space
-    vec4 directionVS;   // RENAMED: Data is expected in view space
+    vec4 positionVS;    
+    vec4 directionVS;   
     vec4 color;
     float spotAngle;
     float range;
@@ -87,7 +88,7 @@ float CalculateAttenuation(float distance, float range) {
 // Calculates contribution for a Point Light (all in view space)
 LightingResult DoPointLight(Light light, Material mat, vec3 V, vec3 P, vec3 N) {
     LightingResult result;
-    vec3 lightPosView = light.positionVS.xyz; // Use view space position
+    vec3 lightPosView = light.positionVS.xyz; 
     vec3 L = lightPosView - P;
     float distance = length(L);
     L = normalize(L);
@@ -114,9 +115,8 @@ LightingResult DoPointLight(Light light, Material mat, vec3 V, vec3 P, vec3 N) {
 // Calculates contribution for a Spot Light (all in view space)
 LightingResult DoSpotLight(Light light, Material mat, vec3 V, vec3 P, vec3 N) {
     LightingResult result;
-    vec3 lightPosView = light.positionVS.xyz; // Use view space position
-    vec3 lightDirView = normalize(light.directionVS.xyz); // Use view space direction
-    
+    vec3 lightPosView = light.positionVS.xyz; 
+    vec3 lightDirView = normalize(light.directionVS.xyz); 
     vec3 L = lightPosView - P;
     float distance = length(L);
     L = normalize(L);

@@ -3,9 +3,11 @@
 #include <iostream>
 #include <GL/glew.h>
 
+#include "../../out/build/x64-Debug/_deps/assimp-src/contrib/openddlparser/include/openddlparser/OpenDDLCommon.h"
 
-Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, std::vector<Texture> textures)
-    : m_Vertices(vertices), m_Indices(indices), m_Textures(std::move(textures)), m_SpecularPower(8.0f)
+
+Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, std::shared_ptr<Material> material)
+    : m_Vertices(vertices), m_Indices(indices), m_SpecularPower(8.0f), m_Material(material)
 {
     // Generate and bind the VAO and VBO
     glGenVertexArrays(1, &m_VAO);
@@ -41,24 +43,73 @@ Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>&
     m_AABB = CreateAABB(m_Vertices);
 }
 
+Mesh::Mesh(Mesh&& other) noexcept
+    : m_Vertices(std::move(other.m_Vertices)),
+    m_Indices(std::move(other.m_Indices)),
+    m_Material(std::move(other.m_Material)),
+    m_VAO(other.m_VAO), m_VBO(other.m_VBO), m_EBO(other.m_EBO) // Transfer handles
+{
+    // IMPORTANT: Null out the other object's handles so its
+    // destructor doesn't release our GPU resources.
+    other.m_VAO = 0;
+    other.m_VBO = 0;
+    other.m_EBO = 0;
+}
+
+// Move assignment operator (similar logic)
+Mesh& Mesh::operator=(Mesh&& other) noexcept
+{
+    if (this != &other)
+    {
+        // Release existing resources...
+        // (call your glDeleteBuffers, etc. here)
+
+// Release this object's own resources first
+        if (m_VAO != 0)
+        {
+            glDeleteVertexArrays(1, &m_VAO);
+            glDeleteBuffers(1, &m_VBO);
+            glDeleteBuffers(1, &m_EBO);
+        }
+
+        // Now, transfer resources from the other object
+        m_Vertices = std::move(other.m_Vertices);
+        m_Indices = std::move(other.m_Indices);
+        m_Material = std::move(other.m_Material);
+        m_VAO = other.m_VAO;
+        m_VBO = other.m_VBO;
+        m_EBO = other.m_EBO;
+
+        // And null out the source object
+        other.m_VAO = 0;
+        other.m_VBO = 0;
+        other.m_EBO = 0;
+    }
+    return *this;
+}
+
 Mesh::~Mesh()
 {
     // De-allocate all resources once the object is destroyed
-    glDeleteVertexArrays(1, &m_VAO);
-    glDeleteBuffers(1, &m_VBO);
-    glDeleteBuffers(1, &m_EBO);
+    if (m_VAO != 0)
+    {
+        glDeleteVertexArrays(1, &m_VAO);
+        glDeleteBuffers(1, &m_VBO);
+        glDeleteBuffers(1, &m_EBO);
+    }
 }
 
-void Mesh::Draw(DrawProperties& globalProperties)
+void Mesh::Draw(DrawProperties& globalProperties) const
 {
     // Counters for texture types to build the uniform names
     unsigned int diffuseNr = 1;
     unsigned int specularNr = 1;
+    std::vector<const Texture*> textures = m_Material->GetAllTextures();
 
-    for (unsigned int i = 0; i < m_Textures.size(); i++)
+    for (unsigned int i = 0; i < textures.size(); i++)
     {
         std::string number;
-        std::string type = m_Textures[i].getType();
+        std::string type = textures[i]->getType();
 
         if (type == "texture_diffuse")
         {
@@ -77,7 +128,7 @@ void Mesh::Draw(DrawProperties& globalProperties)
         globalProperties.shader->setUniformValue((type + number), (int)i);
 
         // Bind the texture to the correct texture unit
-        m_Textures[i].bind(i);
+        textures[i]->bind(i);
     }
 
     globalProperties.shader->setUniformValue("model", m_Transform.GetModelMatrix());
@@ -172,9 +223,9 @@ glm::mat4 Mesh::GetModelMatrix()
     return m_Transform.GetModelMatrix();
 }
 
-uint32_t Mesh::GetFeatureFlag()
+const uint32_t Mesh::GetFeatureFlag() const
 {
-	return m_Material.GetFeatureFlag();
+    return m_Material->GetFeatureFlag();
 }
 
 void Mesh::SetShader(std::string vert, std::string frag)

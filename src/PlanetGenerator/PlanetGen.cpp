@@ -186,14 +186,14 @@ void Planet::LoadMesh(float radius, unsigned int resolution)
 	UpdateMeshBuffers();
 }
 
-void Planet::Draw(DrawProperties& properties)
+void Planet::Draw(DrawProperties& properties) const
 {
 	// Counters for texture types to build the uniform names
 	unsigned int diffuseNr = 1;
 	unsigned int specularNr = 1;
 	unsigned int normalNr = 1;
 
-	std::vector<Texture*> allTex = m_Material.GetAllTextures();
+	std::vector<const Texture*> allTex = m_Material.GetAllTextures();
 	for (unsigned int i = 0; i < allTex.size(); i++)
 	{
 		std::string number;
@@ -254,7 +254,6 @@ std::vector<float> Planet::CreateSphereDensityMap(float radius, unsigned int res
 	std::vector<float> outDensities((resolution + 1) * (resolution + 1) * (resolution + 1));
 
 	float gridPadding = 2.0f;
-
 	float noiseScale1 = 1.7f;
 	float noiseScale2 = 2.0f;
 

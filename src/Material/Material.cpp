@@ -1,4 +1,4 @@
-#include "Scene/Mesh/Material.h"
+#include "Material/Material.h"
 
 #include "../../out/build/x64-Debug/_deps/assimp-src/code/AssetLib/Blender/BlenderScene.h"
 #include "ShaderClass/FeatureFlags.h"
@@ -22,7 +22,7 @@ unsigned int Material::GetID()
 	return m_ID;
 }
 
-uint32_t Material::GetFeatureFlag()
+const uint32_t Material::GetFeatureFlag() const
 {
 	return m_MaterialFlag;
 }
@@ -146,27 +146,32 @@ void Material::CreateSpecularMapAndLoad(std::string imagePath)
 	m_SpecularMap.back().LoadTexture();
 }
 
-std::vector<Texture*> Material::GetAllTextures()
+const std::vector<const Texture*> Material::GetAllTextures() const
 {
-	std::vector<Texture*> outTextures;
-	for (Texture& tex : m_DiffuseMap)
+	std::vector<const Texture*> outTextures;
+	for (const Texture& tex : m_DiffuseMap)
 	{
 		outTextures.push_back(&tex);
 	}
-	for (Texture& tex : m_NormalMap)
+	for (const Texture& tex : m_NormalMap)
 	{
 		outTextures.push_back(&tex);
 	}
-	for (Texture& tex : m_SpecularMap)
+	for (const Texture& tex : m_SpecularMap)
 	{
 		outTextures.push_back(&tex);
 	}
 	return outTextures;
 }
 
-float Material::GetNormalMapScaling()
+const float Material::GetNormalMapScaling() const
 {
 	return m_NormalScaling;
+}
+
+glm::vec3 Material::GetDiffuseColor()
+{
+	return m_DiffuseColor;
 }
 
 

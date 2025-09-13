@@ -8,7 +8,7 @@
 #include "Scene/Transform.h"
 #include "FastNoiseLite.h"
 #include "Scene/Mesh/MeshData.h"
-#include "Scene/Mesh/Material.h"
+#include "Material/Material.h"
 
 class Planet
 {
@@ -18,7 +18,7 @@ public:
 
 	// initial Planet loading
 	void LoadMesh(float radius, unsigned int resolution);
-	void Draw(DrawProperties& properties);
+	void Draw(DrawProperties& properties) const;
 	void DrawPlanetDepthPrepass(DrawProperties& properties);
 
 	void SetLocation(const glm::vec3& location);

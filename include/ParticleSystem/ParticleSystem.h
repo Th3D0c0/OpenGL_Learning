@@ -85,7 +85,7 @@ private:
 
 	std::vector<Particle> m_Particles;
 	std::vector<ParticleGPU> m_ParticlesGPU;
-	Mesh m_Mesh;
+	Mesh* m_Mesh;
 	unsigned int m_VBO;
 	unsigned int m_MaxParticleCount;
 	glm::vec3 m_Gravity;
